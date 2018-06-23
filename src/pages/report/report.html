@@ -1,0 +1,111 @@
+<!--
+  Generated template for the ReportPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>report</ion-title>
+
+    <!--<ion-buttons end>
+
+      <button ion-button (click)="submit()"> SAVE </button>
+
+    </ion-buttons>-->
+
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+	<!--<div #map id = "map"></div>-->
+
+	<!--<img src="https://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=600x300&maptype=roadmap
+&markers=color:blue%7Clabel:S%7C40.702147,-74.015794&markers=color:green%7Clabel:G%7C40.711614,-74.012318
+&markers=color:red%7Clabel:C%7C40.718217,-73.998284
+&key=AIzaSyBgI_KhX2VYMgTTsJAJdlnLWdeD0Ce4DaQ"/> -->
+
+	<ion-item-divider color="yellow"> 
+
+		<p text-center> Finished the walk! </p>
+
+	</ion-item-divider>
+
+	<ion-row>
+
+			<div class="activity"> 
+				<p> Your Dog :</p> 
+				<ion-row class="pee-row">
+					<div class="pee-pic">
+					<img src="assets/imgs/pee.svg" />
+					</div>
+					<div class="pee-info">
+					<p> Pee {{walk?.walknotes.pee }} times </p>
+					</div>
+					<div class="pee-type">
+						<p>(Good)</p>
+					</div>
+				</ion-row>
+				<ion-row class="poo-row">
+					<div class="poo-pic">
+					<img src="assets/imgs/poo.svg" />
+					</div>
+					<div class="poo-info">
+					<p> Poo {{walk?.walknotes.poo }} times </p>
+					</div>
+					<div class="poo-type">
+						<p>(Good)</p>
+					</div>
+				</ion-row>
+			</div>
+
+	</ion-row>
+
+	<ion-row>
+
+		<div>
+
+				<p text-center> Observations: </p>
+
+				<p align="center" class="observations">  {{walk?.walknotes.comments }}  </p>
+
+		</div>
+
+
+	</ion-row>
+
+	<ion-row padding>
+
+	
+				<img [src]="walk?.walker.pic"  class="profile-image"/>
+
+				<p text-center>  You rated {{walk?.walker.name }} </p>
+
+				<rating [(ngModel)]="rate" 
+			        readOnly="true" 
+			        max="5" 
+			        emptyStarIconName="star-outline" 
+			        halfStarIconName="star-half" 
+			        starIconName="star" 
+			        nullable="false">        	
+			     </rating>
+
+	</ion-row> 
+
+	<ion-row padding> <a> Tell a friend about us and get $25 Off </a> </ion-row>
+
+	<ion-row padding> <a> Would you like to help feed homeless dogs </a> </ion-row>
+
+	<ion-row padding>
+
+		<ion-col col-6 offset-3>
+				<button ion-button color="orange" (click)="continue()" round> Done </button>
+		</ion-col>
+
+	</ion-row>
+
+</ion-content>

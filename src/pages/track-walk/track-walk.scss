@@ -1,0 +1,174 @@
+page-track-walk {
+
+	#map {
+
+		width : 100%;
+		height : 50%;
+	}
+
+	.alert-message {
+		display : flex;
+		justify-content : space-evenly;
+	}
+
+	 ion-scroll[scrollX] {
+    	white-space: nowrap;
+    	height: 120px;
+    	overflow: hidden;
+
+    .scroll-item {
+      display: inline-block;
+    }
+
+    ion-avatar img{
+      margin: 10px;
+    }
+  }
+
+  ion-scroll[scroll-avatar]{
+    height: 60px;
+  }
+
+  /* Hide ion-content scrollbar */
+  ::-webkit-scrollbar{
+    display:none;
+  }
+
+  .button-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 10px;
+  }
+
+.top {
+padding-bottom: 25px;
+  display:flex;
+  
+  justify-content: space-around;
+}
+.marker {
+  display: block;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+}
+.bottom {
+  display:flex;
+  
+  justify-content: space-around;
+}
+
+.contact-walker, .message-walker {
+  padding-right: 5px;
+}
+
+.message-walker, .request-pic, .contact-walker, .cancel-walk {
+  width: 150px;
+}
+
+ 
+
+button {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.button-text {
+  flex-direction: flex-start;
+}
+
+.button-icon {
+  margin-top: 10px;
+  flex-direction: flex-end;
+}
+
+.trackwalk-button {
+    border: 2px solid silver;
+    background-color: white;
+    border-radius: 8px;
+    font-size: 16pt; 
+    padding: 5px;
+    overflow-wrap: break-word;
+  }
+
+ion-row {
+  padding-right: 10px;
+  }
+  
+
+}
+
+ion-modal.inset-modal {
+	padding : 60vh 40vw;
+	height : 50%;
+	border-radius : 50px;
+
+
+
+page-notifications-pop-over {
+ 
+
+ .container {
+  height: 25%;
+}
+.pop-over {
+  height: 210px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.picture-wrapper {
+height: 65%;
+  padding:10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  border-bottom: 1px solid gray;
+}
+
+.main-pic {
+  padding-left: 80px;
+  display: flex;
+  align-items: center;
+
+}
+
+.pet-pic {
+  height: 90px;
+  Width: 160px;
+  border: 1px solid gold;
+  border-radius: 50%;
+  padding: 5px;
+}
+
+.green-check {
+  height: 100px;
+  width: 100px;
+  padding-left: 50px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.pop-over-message {
+  height: 35%;
+  padding: 10px;
+}
+
+}
+  
+}
+.marker,
+.gmnoprint {
+  img {
+    display: inline-block;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 100% !important;
+    border: 2px solid red !important;
+  }
+}

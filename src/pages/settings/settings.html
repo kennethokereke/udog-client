@@ -1,0 +1,41 @@
+<!--
+  Generated template for the SettingsPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>settings</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+	<ion-list>
+
+		<ion-item-group>
+    		<ion-item-divider color="yellow">My Account</ion-item-divider>
+    		<button ion-item (click)="edit()">Edit Profile</button>
+    		<button ion-item>Payment Method</button>
+    		<button ion-item>Bill Information</button>
+  		</ion-item-group>
+
+
+		<ion-item-group>
+    		<ion-item-divider color="yellow">Pets</ion-item-divider>
+    		<button ion-item (click)="pets()">Your Pets</button>
+    	</ion-item-group>
+
+		<ion-item-group>
+    		<ion-item-divider color="yellow">Information</ion-item-divider>
+    		<ion-item>Contact Us: +1 800 556 7898</ion-item>
+    		<ion-item><a href="udogapp.com">Buy seasonal costumes for your furry friend</a></ion-item>
+  		</ion-item-group>
+
+	</ion-list>
+
+</ion-content>

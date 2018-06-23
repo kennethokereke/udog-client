@@ -1,0 +1,53 @@
+page-report {
+
+#map {
+
+		width : 100%;
+		height : 25%;
+	}
+
+
+	ul {
+  padding: 0px;
+ 
+  &.rating li {
+    padding: 5px 10px !important;
+    background-color: black;
+    color: orange;
+ 
+    ion-icon {
+      font-size: 30px;
+    }
+  }
+}
+
+.activity {
+width: 90%;
+PADDING: 10PX;
+display: flex;
+FLEX-DIRECTION: COLUMN;
+justify-content: flex-start;
+
+}
+
+.activity img {
+  height: 70px;
+  width: 70px;
+}
+
+.pee-row, .poo-row {
+border-bottom : 1px solid;
+padding: 10px;
+  
+}
+
+.pee-info, .poo-info, .pee-type, .poo-type {
+  padding-left: 45px;
+}
+
+.poo-type, .pee-type {
+  color: red;
+}
+
+
+}

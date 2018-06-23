@@ -1,0 +1,57 @@
+page-walk-feed {
+
+
+
+p {
+	font-weight: 2px;
+}
+.outgoing-message {
+	border: 1px solid blue;
+	border-radius: 30px;
+	background: #0084ff;
+  	color: #fff;
+  	float: right;
+  	padding: 10px;
+  	font-family: Helvetica, Arial, sans-serif;
+}
+
+.incoming-message {
+	background: #eee;
+  	float: left;
+  	border: 1px solid;
+	border-radius: 30px;
+	font-family: Helvetica, Arial, sans-serif;
+	padding: 10px;
+}
+
+.outgoing-message + .incoming-message {
+	border-bottom-right-radius: 5px;
+}
+
+.outgoing-message + .outgoing-message {
+	border-top-right-radius: 5px;
+  	border-bottom-right-radius: 5px;
+}
+
+.incoming-message + .incoming-message {
+	border-top-left-radius: 5px;
+  	border-bottom-left-radius: 5px;
+}
+
+.outgoing-message:last-of-type {
+  border-bottom-right-radius: 30px;
+}
+
+.incoming-message:last-of-type {
+  border-bottom-right-radius: 30px;
+}
+
+}
+
+#message {
+	width : 90%;
+}
+
+#upload {
+	display : none;
+}

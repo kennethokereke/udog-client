@@ -1,0 +1,30 @@
+<!--
+  Generated template for the NotificationAlertPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+
+<ion-content class="notification-popup" *ngIf="reqData">
+    <h2 *ngIf="reqData.msgTitle">{{reqData.msgTitle}}</h2>
+  
+    <img *ngIf="walkerData" src="{{walkerData.pic}}">
+  
+    <div class="bookwalk-pet-pic" *ngIf="pets">
+      <ng-container *ngFor="let item of pets">
+        <img [src]="item?.pic" class="pet-image" [ngStyle]="{'align-self': 'center'}"/>
+      </ng-container>
+    </div>
+  
+    <div class="poup-btn-wrap" (click)="dismiss()">
+      <img class="tick-img" src="assets/imgs/greencheck.svg">
+    </div>
+  
+    <!-- <ion-buttons start>
+      <button ion-button (click)="dismiss()"></button>
+    </ion-buttons> -->
+    <div class="popup-content" *ngIf="reqData.msgText">
+      <p>{{reqData.msgText}}</p>	
+    </div>
+  
+  </ion-content>

@@ -1,0 +1,68 @@
+page-rate-walk {
+
+	ul {
+  
+ display: flex;
+  &.rating li {
+    
+    background-color: black;
+    color: orange;
+    border-color : black;
+ 
+    ion-icon {
+      font-size: 30px;
+    }
+  }
+
+  }
+
+  .profile-image {
+  border: 2px solid #f3be16;
+  border-radius: 50%;
+  padding: 4px;
+  background-color: white;
+  }
+
+  .row {
+  display: flex;
+  justify-content: center;
+  }
+
+  rating {
+  padding-right: 44px;
+  }
+
+  ion-col .col {
+  padding-left: 80px;
+  display: flex;
+  justify-content: flex-end;
+  }
+
+  ion-row .row {
+  display: flex;
+  justify-content: space-around;
+  }
+
+  textarea {
+  border: 1px solid gray;
+  border-radius: 10px;
+  }
+
+  .text-container {
+  display: flex;
+  justify-content: center;
+  }
+  .text{
+  width: 90%;
+  }
+  .button-container {
+  display: flex;
+  justify-content: center;
+ 
+  }
+
+  div .scroll-content {
+  display: flex;
+  justify-content: center;
+  }
+}
