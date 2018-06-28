@@ -8,12 +8,12 @@ import { SignUpPage } from '../sign-up/sign-up'
 import { DomSanitizer } from '@angular/platform-browser'
 import { PetPage } from '../pet/pet'
 import { CardPage } from '../card/card'
-import { SocialSharing } from '@ionic-native/social-sharing'
 import { AngularFireAuth } from 'angularfire2/auth';
 import { AngularFireDatabase } from 'angularfire2/database';
 import { AngularFirestore, AngularFirestoreCollection } from 'angularfire2/firestore';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
+import { SocialSharing } from '@ionic-native/social-sharing';
 
 
 /**
@@ -30,29 +30,27 @@ import 'rxjs/add/operator/map';
 })
 export class WalkerPage {
 
+	users;
 	walker = {
 		name : '',
 		about : '',
 		video : '',
-		trust : '',
-		pic : ''
+		trust : ''
 	}
 
-	itemsCollection: AngularFirestoreCollection<Items>; //Firestore collection
-	items: Observable<Items[]>; // read collection
+	itemsCollection: AngularFirestoreCollection<any>; //Firestore collection
+	items: Observable<any[]>; // read collection
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, 
+  constructor(public fireauth: AngularFireAuth, public navCtrl: NavController, 
+    public navParams: NavParams, 
   	private storage : Storage,
   	public sanitizer : DomSanitizer,
     private socialsharing : SocialSharing,
     public afDatabase:AngularFireDatabase,
     private afs: AngularFirestore ) {
 
-		interface Items {
-			description: string;
-			itemid: number;
-		}
-		
+
+//    this.username = fireauth.auth.currentUser.email;
   }
 
   ngOnInit() {
@@ -62,21 +60,18 @@ export class WalkerPage {
       	})*/
 
 
-	  this.walker = JSON.parse(localStorage.getItem('selectedWalker'))
-	  console.log(this.walker);
-	  
+//      this.walker = JSON.parse(localStorage.getItem('selectedWalker'))
    }
+
+    ionViewWillEnter() {
+	   this.walker = JSON.parse(localStorage.getItem('walker'));
+//	   console.log('walker'+this.walker.walker_id);
+	   this.itemsCollection = this.afs.collection('walkers', ref => ref.where('walker_id', '==', this.walker.walker_id));
+	   this.items = this.itemsCollection.valueChanges()
+	}
 
    public getSanitizeUrl(url : string) {
      return this.sanitizer.bypassSecurityTrustUrl(url)
-   }
-
-   ionViewWillEnter() {
-	this.itemsCollection = this.afs.collection('walkers', ref => ref.where('email', '==', 'dzonga@udogapp.com'));
-	this.items = this.itemsCollection.valueChanges()
-	this.items.subscribe(item => {
-		this.walker.name = item[0].first_name;
-	})
    }
 
   ionViewDidLoad() {
@@ -132,7 +127,7 @@ export class WalkerPage {
 				}
 		}
 		else {
-			this.navCtrl.push(SignUpPage, { startPage : 'walker' })
+			this.navCtrl.push(SignUpPage)
 		}
 
 		

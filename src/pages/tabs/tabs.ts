@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 
 import { AboutPage } from '../about/about';
 import { ProfilePage } from '../profile/profile';
@@ -10,6 +10,7 @@ import { BookWalkPage } from '../book-walk/book-walk'
 import { RegisterPage } from '../register/register'
 import { PetPage } from '../pet/pet'
 import { CardPage } from '../card/card'
+import { NavController, NavParams } from 'ionic-angular';
 import { RateWalkPage } from '../rate-walk/rate-walk'
 
 @Component({
@@ -17,12 +18,20 @@ import { RateWalkPage } from '../rate-walk/rate-walk'
 })
 export class TabsPage {
 
+//  @ViewChild('myTabs') tabRef: Tabs;
+  variable: Boolean;
   tab1Root = HomePage;
   tab2Root = WalksPage;
   tab3Root = ProfilePage;
   tab4Root = RateWalkPage;
   tab5Root = TrackWalkPage;
-  constructor() {
 
+  constructor(public navCtrl: NavController, public navParams: NavParams) {
+    //console(this.navCtrl.getActive().component.tabRef.getSelected().root.name);
+    this.variable = false;
+  }
+
+  ionViewDidEnter() {
+//    this.tabRef.select(2);
   }
 }

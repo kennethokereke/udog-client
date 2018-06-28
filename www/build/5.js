@@ -1,14 +1,14 @@
 webpackJsonp([5],{
 
-/***/ 890:
+/***/ 460:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "VerifyPageModule", function() { return VerifyPageModule; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "WalkerPageModule", function() { return WalkerPageModule; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__verify__ = __webpack_require__(229);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__walker__ = __webpack_require__(152);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -18,23 +18,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 
-var VerifyPageModule = /** @class */ (function () {
-    function VerifyPageModule() {
+var WalkerPageModule = /** @class */ (function () {
+    function WalkerPageModule() {
     }
-    VerifyPageModule = __decorate([
+    WalkerPageModule = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["J" /* NgModule */])({
             declarations: [
-                __WEBPACK_IMPORTED_MODULE_2__verify__["a" /* VerifyPage */],
+                __WEBPACK_IMPORTED_MODULE_2__walker__["a" /* WalkerPage */],
             ],
             imports: [
-                __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* IonicPageModule */].forChild(__WEBPACK_IMPORTED_MODULE_2__verify__["a" /* VerifyPage */]),
+                __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* IonicPageModule */].forChild(__WEBPACK_IMPORTED_MODULE_2__walker__["a" /* WalkerPage */]),
             ],
         })
-    ], VerifyPageModule);
-    return VerifyPageModule;
+    ], WalkerPageModule);
+    return WalkerPageModule;
 }());
 
-//# sourceMappingURL=verify.module.js.map
+//# sourceMappingURL=walker.module.js.map
 
 /***/ })
 

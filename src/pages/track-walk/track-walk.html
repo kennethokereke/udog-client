@@ -28,7 +28,7 @@
 
 <ion-content padding>
 
-	<div #map id="map" class="map"></div>
+	<div #map id = "map"></div>
 	<ion-item-divider [ngStyle]="{'background-color': '#D0021B'}">{{ date }} min remaining</ion-item-divider>
 
 	<!--<ion-item-divider color="yellow">35 min walk
@@ -114,7 +114,7 @@
 </div>
 
 <div class="bottom">
-  <div class="message-walker">
+  <!-- <div class="message-walker">
       <button icon-end class="trackwalk-button message-walker" type="button" (click)="message()">
         <div class="button-text">
           Message Walker
@@ -123,7 +123,7 @@
         <ion-icon name="ios-mail-outline"></ion-icon>
       </div>
       </button>
-  </div>
+  </div> -->
 
   <div class="cancel-walk">
        <button icon-end class="trackwalk-button" type="button" (click)="cancel()">
@@ -138,6 +138,10 @@
   </div>
 </div>
 </div>
+
+<ion-fab bottom right #fab>
+  <button ion-fab style="background: black;" type="button" (click)="message()" no-padding><ion-icon name="ios-mail-outline"></ion-icon></button>
+</ion-fab>
 
     <ion-item-divider>IMAGES
    

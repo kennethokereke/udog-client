@@ -27,7 +27,7 @@ import { RegisterPage } from '../pages/register/register'
 import { RateWalkPage } from '../pages/rate-walk/rate-walk'
 import { EditprofilePage } from '../pages/editprofile/editprofile'
 import { PetsPage } from '../pages/pets/pets'
-import { NotificationAlertPage } from '../pages/notifications-alert/notifications-alert'
+import { VideocallPage } from '../pages/videocall/videocall'
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -39,7 +39,7 @@ import { StreamingMedia } from '@ionic-native/streaming-media'
 import { Camera, CameraOptions } from '@ionic-native/camera'
 import { Geolocation } from '@ionic-native/geolocation'
 import { Facebook } from '@ionic-native/facebook'
-import { SelectMorePetsPage } from '../pages/select-more-pets/select-more-pets'
+import firebase from 'firebase';
 
 import { HttpModule } from '@angular/http';
 import { IonicStorageModule } from '@ionic/storage'
@@ -57,12 +57,20 @@ import { ApiServiceProvider } from '../providers/api-service/api-service'
 import * as Constants from '../providers/config'
 
 const API_URL = Constants.API_URL;
-const firebaseAuth = Constants.firebaseConfig;
 
 //import { SocketIoModule, SocketIoConfig } from 'ng-socket-io'
 import { FireProvider } from '../providers/fire/fire';
 import { ClientProvider } from '../providers/client/client';
 const socketConfig = { url : API_URL , options : {}}
+
+export const firebaseAuth = {
+    apiKey: "AIzaSyBgI_KhX2VYMgTTsJAJdlnLWdeD0Ce4DaQ",
+    authDomain: "udog-eabc9.firebaseapp.com",
+    databaseURL: "https://udog-eabc9.firebaseio.com",
+    projectId: "udog-eabc9",
+    storageBucket: "udog-eabc9.appspot.com",
+    messagingSenderId: "556174911218"
+  };
 
 @NgModule({
   declarations: [
@@ -80,6 +88,7 @@ const socketConfig = { url : API_URL , options : {}}
     PetPage,
     WalkFeedPage,
     TrackWalkPage,
+    VideocallPage,
     WalksPage,
     ReportPage,
     SettingsPage,
@@ -89,9 +98,7 @@ const socketConfig = { url : API_URL , options : {}}
     RegisterPage,
     RateWalkPage,
 	EditprofilePage,
-  PetsPage,
-  NotificationAlertPage,
-  SelectMorePetsPage
+	PetsPage,
 
   ],
   imports: [
@@ -127,6 +134,7 @@ const socketConfig = { url : API_URL , options : {}}
     WalkFeedPage,
     TrackWalkPage,
     WalksPage,
+    VideocallPage,
     ReportPage,
     SettingsPage,
     AddressPage,
@@ -135,9 +143,7 @@ const socketConfig = { url : API_URL , options : {}}
     RegisterPage,
     RateWalkPage,
 	EditprofilePage,
-  PetsPage,
-  NotificationAlertPage,
-  SelectMorePetsPage
+	PetsPage,
   ],
   providers: [
     GoogleMaps,

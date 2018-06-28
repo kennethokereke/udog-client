@@ -1,6 +1,7 @@
 import { Component, ViewChild, ElementRef, OnInit, NgZone } from '@angular/core';
 import { IonicPage, NavController, NavParams, ViewController, PopoverController, AlertController , Events, 
-	ModalController } from 'ionic-angular';
+	ModalController, 
+	Tabs} from 'ionic-angular';
 	import { Geolocation } from '@ionic-native/geolocation'
 	import { TabsPage } from '../tabs/tabs'
 	import { SettingsPage } from '../settings/settings'
@@ -25,7 +26,8 @@ import { IonicPage, NavController, NavParams, ViewController, PopoverController,
 	})
 	export class TrackWalkPage {
 
-		@ViewChild('map') mapElement : ElementRef
+		@ViewChild('map') mapElement : ElementRef;
+		@ViewChild('tabs') primaryTabs : Tabs;
 		map : any;
 		marker : any
 		lat : any 
@@ -54,6 +56,7 @@ import { IonicPage, NavController, NavParams, ViewController, PopoverController,
 
 		currentMapTrack = null;
 		trackedRoute:any = [];
+		variable = true;
 
 		constructor(public navCtrl: NavController, public navParams: NavParams,
 			private geolocation : Geolocation,
@@ -67,8 +70,6 @@ import { IonicPage, NavController, NavParams, ViewController, PopoverController,
 			public modalCtrl : ModalController,
 			public zone : NgZone,
 			public sanitizer : DomSanitizer ) {
-
-
 			}
 
 			public getSanitizeUrl(url : string) {

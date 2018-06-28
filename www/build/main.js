@@ -1,979 +1,6 @@
 webpackJsonp([23],{
 
-/***/ 101:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return TrackWalkPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_geolocation__ = __webpack_require__(114);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__tabs_tabs__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__settings_settings__ = __webpack_require__(136);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__walk_feed_walk_feed__ = __webpack_require__(232);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__notifications_pop_over_notifications_pop_over__ = __webpack_require__(233);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__ionic_native_social_sharing__ = __webpack_require__(185);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_firebase__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_9_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__report_report__ = __webpack_require__(137);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_mapbox_gl__ = __webpack_require__(410);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_mapbox_gl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_11_mapbox_gl__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__angular_platform_browser__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__rate_walk_rate_walk__ = __webpack_require__(138);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__providers_fire_fire__ = __webpack_require__(68);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var TrackWalkPage = /** @class */ (function () {
-    function TrackWalkPage(navCtrl, navParams, geolocation, viewCtrl, storage, fire, popCtrl, alertCtrl, events, socialsharing, modalCtrl, zone, sanitizer) {
-        this.navCtrl = navCtrl;
-        this.navParams = navParams;
-        this.geolocation = geolocation;
-        this.viewCtrl = viewCtrl;
-        this.storage = storage;
-        this.fire = fire;
-        this.popCtrl = popCtrl;
-        this.alertCtrl = alertCtrl;
-        this.events = events;
-        this.socialsharing = socialsharing;
-        this.modalCtrl = modalCtrl;
-        this.zone = zone;
-        this.sanitizer = sanitizer;
-        this.path = [];
-        this.speedfactor = 25;
-        this.messages = [];
-        this.geojson = {
-            'type': 'FeatureCollection',
-            'features': [{
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'LineString',
-                        'coordinates': []
-                    }
-                }]
-        };
-        this.walkersMarkers = [];
-        this.currentMapTrack = null;
-        this.trackedRoute = [];
-    }
-    TrackWalkPage.prototype.getSanitizeUrl = function (url) {
-        return this.sanitizer.bypassSecurityTrustUrl(url);
-    };
-    TrackWalkPage.prototype.ionViewDidLoad = function () {
-        var _this = this;
-        console.log('ionViewDidLoad TrackWalkPage');
-        //this.loadMap()
-        //this.walkEnd()
-        this.events.subscribe('message:received', function () {
-            _this.popOver();
-            console.log('received from track walk');
-        });
-    };
-    TrackWalkPage.prototype.ionViewDidEnter = function () {
-        this.request = JSON.parse(localStorage.getItem('request'));
-        console.log('treck Req', this.request);
-        this.date = this.request.duration.time;
-        this.loadMap();
-        this.timeChanges();
-        this.newPics();
-        this.stopChanges();
-    };
-    TrackWalkPage.prototype.ionViewWillLeave = function () {
-        clearInterval(this.treckPosition);
-    };
-    TrackWalkPage.prototype.setLineOnMap = function (walker) {
-        console.log('setLineOnMap', walker);
-        this.trackedRoute.push({ lat: walker.lat, lng: walker.lng });
-        this.redrawPath(this.trackedRoute);
-    };
-    TrackWalkPage.prototype.redrawPath = function (path) {
-        if (this.currentMapTrack) {
-            this.currentMapTrack.setMap(null);
-        }
-        console.log('path', path);
-        if (path.length > 1) {
-            this.currentMapTrack = new google.maps.Polyline({
-                path: path,
-                geodesic: true,
-                strokeColor: '#ff00ff',
-                strokeOpacity: 1.0,
-                strokeWeight: 3
-            });
-            this.currentMapTrack.setMap(this.map);
-        }
-    };
-    TrackWalkPage.prototype.loadMap = function () {
-        var _this = this;
-        this.geolocation.getCurrentPosition()
-            .then(function (position) {
-            _this.lat = position.coords.latitude;
-            _this.lng = position.coords.longitude;
-            var mapOptions = {
-                center: {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                },
-                zoom: 17,
-                mapTypeId: google.maps.MapTypeId.ROADMAP,
-            };
-            _this.map = new google.maps.Map(_this.mapElement.nativeElement, mapOptions);
-            //this.addMarker()
-            _this.loadMarkerData();
-            //this.initialMarker()
-            //this.loadMapBox(this.lat, this.lng)
-        })
-            .catch(function (err) {
-            alert('We could not get your current location');
-            console.log(err);
-        });
-        //this.addMarker()
-    };
-    TrackWalkPage.prototype.loadMarkerData = function () {
-        var _this = this;
-        this.fire.getWalkerPosition(this.request.walker_id).then(function (response) {
-            _this.walkerPosition = response;
-            console.log('walkerPosition', _this.walkerPosition);
-            if (_this.walkerPosition.isActive) {
-                _this.addMapboxMarker(_this.walkerPosition);
-            }
-        });
-        this.treckPosition = setInterval(function () {
-            _this.fire.getWalkerPosition(_this.request.walker_id)
-                .then(function (res) {
-                _this.walkerPosition = res;
-                if (_this.walkerPosition.isActive) {
-                    console.log('walkerPosition', _this.walkerPosition);
-                    _this.clearWalker();
-                    _this.addMapboxMarker(_this.walkerPosition);
-                    if (_this.walkerPosition.isTrecking) {
-                        console.log('isTrecking');
-                        _this.setLineOnMap(_this.walkerPosition);
-                    }
-                }
-            });
-        }, 10000);
-    };
-    TrackWalkPage.prototype.addMarker = function (lat, lng) {
-        this.marker = new google.maps.Marker({
-            position: {
-                lat: lat,
-                lng: lng // -122.420453,
-            },
-            //icon : walker.pic,
-            map: this.map,
-        });
-        return this.marker;
-    };
-    TrackWalkPage.prototype.addPolyline = function () {
-        var walkPath = new google.maps.Polyline({
-            path: this.path,
-            geodesic: true,
-            strokeColor: '#FF0000',
-            strokeOpacity: 1.0,
-            strokeWeight: 2
-        });
-        walkPath.setMap(this.map);
-    };
-    TrackWalkPage.prototype.loadData = function () {
-        /*this.storage.get('request')
-        .then((val)=> {
-        this.request = val
-        console.log(this.request)
-        this.initialMarker()
-        })
-        .catch((err) => console.log(err))*/
-    };
-    TrackWalkPage.prototype.initialMarker = function () {
-        var _this = this;
-        __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("/requests/" + this.request._id).once('value')
-            .then(function (snap) {
-            _this.lat = snap.val().lat;
-            _this.lng = snap.val().lng;
-            //this.marker.setPosition(lat, lng)
-            //let latLng = new google.maps.LatLng(lat, lng)
-            //this.marker.setPosition(latLng)
-            _this.addMarker(_this.lat, _this.lng);
-        })
-            .catch(function (err) {
-            console.log(err);
-        });
-    };
-    TrackWalkPage.prototype.listenForChanges = function () {
-        var _this = this;
-        __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("/requests/" + this.request._id).on('value', function (snap) {
-            console.log(snap.val());
-            var lat = snap.val().lat;
-            var lng = snap.val().lng;
-            _this.date = snap.val().date;
-            _this.lat = lat;
-            _this.lng = lng;
-            _this.path.push({ lat: _this.lat, lng: _this.lng });
-            _this.addPolyline();
-            //this.marker.setPosition(lat, lng)
-            var latLng = new google.maps.LatLng(lat, lng);
-            _this.marker.setPosition(latLng);
-            //this.addMarker(lat, lng)
-        });
-    };
-    TrackWalkPage.prototype.message = function () {
-        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_6__walk_feed_walk_feed__["a" /* WalkFeedPage */]);
-    };
-    TrackWalkPage.prototype.close = function () {
-        this.viewCtrl.dismiss();
-        this.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_3__tabs_tabs__["a" /* TabsPage */]);
-    };
-    TrackWalkPage.prototype.popOver = function () {
-        var alertPopOver = this.popCtrl.create(__WEBPACK_IMPORTED_MODULE_7__notifications_pop_over_notifications_pop_over__["a" /* NotificationsPopOverPage */], { cssClass: 'inset-modal' });
-        alertPopOver.present();
-    };
-    TrackWalkPage.prototype.cancel = function () {
-        var prompt = this.alertCtrl.create({
-            message: /*`<div class="container">
-
-            <div class="pop-over">
-            <div class="picture-wrapper">
-
-            <div class="main-pic">
-            <img src="assets/imgs/snowball.png"  class="pet-pic"/>
-            </div>
-
-            <div class="green-check">
-            <img src="assets/imgs/greencheck.svg"/>
-            </div>
-            </div>
-
-            <div class="pop-over-message">
-            <p> Are you sure, you want to cancel the walk? </p>
-            </div>
-
-            </div>
-
-            </div>`,*/ 'Are you sure, you want to cancel the walk',
-            buttons: [
-                {
-                    text: 'NO',
-                    handler: function (data) { }
-                },
-                {
-                    text: 'YES, cancel',
-                    handler: function (data) { }
-                }
-            ],
-            cssClass: 'ion-modal.inset-modal',
-        });
-        prompt.present();
-    };
-    TrackWalkPage.prototype.share = function (image) {
-        this.socialsharing.share("Pic's from my dog's walk by UDog", "UDog Walk", image).then(function () {
-            console.log("shareSheetShare: Success");
-        }).catch(function () {
-            console.error("shareSheetShare: failed");
-        });
-    };
-    TrackWalkPage.prototype.settings = function () {
-        var settingsModal = this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_4__settings_settings__["a" /* SettingsPage */]);
-    };
-    TrackWalkPage.prototype.walkEnd = function () {
-        __WEBPACK_IMPORTED_MODULE_9_firebase__["firestore"]().collection("walks").where('walkended', '==', true).where('_id', '==', this.request._id)
-            .onSnapshot(function (querySnapshot) {
-            querySnapshot.forEach(function (doc) {
-                this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_10__report_report__["a" /* ReportPage */]);
-            });
-        });
-    };
-    TrackWalkPage.prototype.mapboxPath = function () {
-        this.map.addSource('trace', {
-            'type': 'geojson',
-            'data': this.geojson
-        });
-        this.map.addLayer({
-            'id': 'trace',
-            'type': 'line',
-            'source': 'trace',
-            'layout': {
-                'line-cap': 'round',
-                'line-join': 'round',
-            },
-            'paint': {
-                'line-color': '#4A90E2',
-                'line-width': 4,
-                'line-opacity': 0.6
-            }
-        });
-        //this.map.jumpTo({ 'center' : [this.geojson.features[0].geometry.coordinates[0]], 'zoom' : 14})
-    };
-    TrackWalkPage.prototype.pathChanges = function () {
-        var _this = this;
-        var walkRef = __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("walks/path/" + this.request.id);
-        walkRef.on('child_added', function (data) {
-            //console.log('pathChanges',data.val());
-            _this.path.push({ lng: data.val().lng, lat: data.val().lat });
-            _this.lat = data.val().lat;
-            _this.lng = data.val().lng;
-            _this.geojson.features[0].geometry.coordinates.push([data.val().lng, data.val().lat]);
-            _this.map.getSource('trace').setData(_this.geojson);
-            _this.map.panTo([_this.lng, _this.lat]);
-        });
-    };
-    TrackWalkPage.prototype.timeChanges = function () {
-        var _this = this;
-        var timeRef = __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("walks/time/" + this.request.id);
-        timeRef.on('value', function (data) {
-            console.log('timeChanges', data.val());
-            if (data.val() !== null) {
-                _this.date = data.val().date;
-            }
-        });
-    };
-    TrackWalkPage.prototype.stopChanges = function () {
-        var _this = this;
-        var timeRef = __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("walks/stop/" + this.request.id);
-        timeRef.on('value', function (data) {
-            console.log('stopChanges', data.val());
-            if (data.val() !== null) {
-                //this.date = data.val().date
-                if (data.val().stop == true) {
-                    _this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_13__rate_walk_rate_walk__["a" /* RateWalkPage */]);
-                    __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]()
-                        .ref("/walks/stop/" + _this.request.id)
-                        .off();
-                }
-            }
-        });
-    };
-    TrackWalkPage.prototype.loadMapBox = function (lat, lng) {
-        __WEBPACK_IMPORTED_MODULE_11_mapbox_gl___default.a.accessToken = 'pk.eyJ1IjoidWRvZyIsImEiOiJjamZlZnNzOHgwN2ZjMzNsOXpsamFzNXZ3In0.OtgpQ6_vMLQGyifAdgcCDQ';
-        var mapCanvas = document.getElementsByClassName('mapboxgl-canvas').item(0);
-        this.map = new __WEBPACK_IMPORTED_MODULE_11_mapbox_gl___default.a.Map({
-            container: this.mapElement.nativeElement,
-            style: 'mapbox://styles/mapbox/streets-v9',
-            zoom: 14,
-            center: [lng, lat]
-        });
-        //mapCanvas.style.height = '100%'
-        //mapCanvas.style.width = '25%'
-        //this.initialMapboxMarker(lat,lng)
-        this.map.on('load', function () {
-            //this.mapboxPath()
-            //this.pathChanges()
-        });
-    };
-    TrackWalkPage.prototype.newPics = function () {
-        var _this = this;
-        var messagesRef = __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("messages/" + this.request.id);
-        messagesRef.on('child_added', function (data) {
-            if (data.val().message.type === 'image' && data.val().message.from === 'walker') {
-                _this.messages.push(data.val().message);
-            }
-        });
-    };
-    TrackWalkPage.prototype.clearWalker = function () {
-        this.walkersMarkers.forEach(function (walkers) {
-            walkers.setMap(null);
-        });
-    };
-    TrackWalkPage.prototype.addMapboxMarker = function (walkerData) {
-        //console.log('addMapboxMarker',walkerData);
-        var _this = this;
-        this.zone.run(function () {
-            // let el = document.createElement('div')
-            //   el.className = 'marker'
-            //   el.style.backgroundImage = `url(${walkerData.walker.pic})`
-            //   el.style.backgroundRepeat = 'no-repeat'
-            //   el.style.backgroundSize = '50px 50px'
-            //   el.style.width = '50px'
-            //   el.style.height = '50px'
-            var image = new google.maps.MarkerImage(walkerData.walker.pic, null, null, null, new google.maps.Size(40, 52));
-            var marker = new google.maps.Marker({
-                position: {
-                    lat: walkerData.lat,
-                    lng: walkerData.lng // -122.420453,
-                },
-                icon: image,
-                map: _this.map
-            });
-            _this.walkersMarkers.push(marker);
-            return marker;
-        });
-    };
-    __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_9" /* ViewChild */])('map'),
-        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_0__angular_core__["u" /* ElementRef */])
-    ], TrackWalkPage.prototype, "mapElement", void 0);
-    TrackWalkPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-track-walk',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/track-walk/track-walk.html"*/'<!--\n  Generated template for the TrackWalkPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>TrackWalk</ion-title>\n\n    <!--<ion-buttons end>\n\n      <button ion-button (click)="close()"> CLOSE</button>\n\n    </ion-buttons>-->\n\n    <ion-buttons end>\n\n      <button ion-button icon-only (click)="settings()">\n        <ion-icon name="more"></ion-icon>\n      </button>\n    </ion-buttons>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<div #map id="map" class="map"></div>\n	<ion-item-divider [ngStyle]="{\'background-color\': \'#D0021B\'}">{{ date }} min remaining</ion-item-divider>\n\n	<!--<ion-item-divider color="yellow">35 min walk\n		<p> 1 mile</p>\n	</ion-item-divider>-->\n\n<!--  --><!--   <ion-row >\n\n   <ion-col col-6>\n      <button icon-end class="trackwalk-button contact-walker" type="button">\n        <div class="button-text">\n          Contact Walker \n        </div>\n        <div class="button-icon">\n        <ion-icon name="ios-call-outline"></ion-icon>\n      </div>\n      </button>\n</ion-col>\n\n   <ion-col col-6>\n      <button icon-end class="trackwalk-button" type="button" (click)="popOver()">\n        <div class="button-text">\n          Request Pictures\n          </div>\n          <div class="button-icon"> \n        <ion-icon name="ios-camera-outline"></ion-icon>\n          </div>\n      </button>\n  </ion-col>\n\n</ion-row>\n\n<ion-row>\n\n    <ion-col col-6>\n      <button icon-end class="trackwalk-button message-walker" type="button" (click)="message()">\n        <div class="button-text">\n          Message Walker\n          </div>\n          <div class="button-icon"> \n        <ion-icon name="ios-mail-outline"></ion-icon>\n      </div>\n      </button>\n  </ion-col>\n\n    <ion-col col-6>\n      <button icon-end class="trackwalk-button" type="button" (click)="cancel()">\n        <div class="button-text">\n          Cancel Walk \n        </div>\n        <div class="button-icon">\n          <ion-icon name="ios-close-circle-outline"></ion-icon>\n        </div>\n          <!-<img src="assets/imgs/cancel.svg" height="15" width="15"/> -->\n<!--       </button>\n  </ion-col>\n</ion-row> --> \n\n\n<div class="button-container">\n<div class="top">\n  <div class="contact-walker">\n      <button icon-end class="trackwalk-button contact-walker" type="button">\n        <div class="button-text">\n          Contact Walker \n        </div>\n        <div class="button-icon">\n        <ion-icon name="ios-call-outline"></ion-icon>\n        </div>\n      </button>\n  </div>\n\n  <div class="request-pic">\n      <button icon-end class="trackwalk-button" type="button" (click)="popOver()">\n        <div class="button-text">\n          Request Pictures\n          </div>\n          <div class="button-icon"> \n        <ion-icon name="ios-camera-outline"></ion-icon>\n          </div>\n      </button>\n  </div>\n</div>\n\n<div class="bottom">\n  <div class="message-walker">\n      <button icon-end class="trackwalk-button message-walker" type="button" (click)="message()">\n        <div class="button-text">\n          Message Walker\n          </div>\n          <div class="button-icon"> \n        <ion-icon name="ios-mail-outline"></ion-icon>\n      </div>\n      </button>\n  </div>\n\n  <div class="cancel-walk">\n       <button icon-end class="trackwalk-button" type="button" (click)="cancel()">\n        <div class="button-text">\n          Cancel Walk \n        </div>\n        <div class="button-icon">\n          <ion-icon name="ios-close-circle-outline"></ion-icon>\n        </div>\n          <!-- <img src="assets/imgs/cancel.svg" height="15" width="15"/> -->\n        </button>\n  </div>\n</div>\n</div>\n\n    <ion-item-divider>IMAGES\n   \n  </ion-item-divider>\n\n    <ion-scroll scrollX=true style="width: 100%; height: 20%;">\n\n          <!--<img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" (click)="share()"/>\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />-->\n\n          <ion-list no-lines>\n      <ion-item *ngFor="let message of messages" [ngSwitch]="message.type">\n        <p *ngSwitchCase=" \'text\' ">{{ message.txt}}</p>\n        <img *ngSwitchCase=" \'image\' " [src]="sanitizer.bypassSecurityTrustUrl(message.url)" width="100" height="100" (click)="share(message.url)"/> \n      </ion-item>\n    </ion-list>\n\n  </ion-scroll>\n\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/track-walk/track-walk.html"*/,
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
-            __WEBPACK_IMPORTED_MODULE_2__ionic_native_geolocation__["a" /* Geolocation */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* ViewController */],
-            __WEBPACK_IMPORTED_MODULE_5__ionic_storage__["b" /* Storage */],
-            __WEBPACK_IMPORTED_MODULE_14__providers_fire_fire__["a" /* FireProvider */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* PopoverController */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["b" /* Events */],
-            __WEBPACK_IMPORTED_MODULE_8__ionic_native_social_sharing__["a" /* SocialSharing */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */],
-            __WEBPACK_IMPORTED_MODULE_0__angular_core__["N" /* NgZone */],
-            __WEBPACK_IMPORTED_MODULE_12__angular_platform_browser__["c" /* DomSanitizer */]])
-    ], TrackWalkPage);
-    return TrackWalkPage;
-}());
-
-//# sourceMappingURL=track-walk.js.map
-
-/***/ }),
-
-/***/ 102:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WalksPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_axios__ = __webpack_require__(121);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_axios__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__providers_config__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__track_walk_track_walk__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__report_report__ = __webpack_require__(137);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_firebase__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__sign_up_sign_up__ = __webpack_require__(76);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__firebase_firestore__ = __webpack_require__(42);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__providers_client_client__ = __webpack_require__(184);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-
-
-
-
-
-
-
-var API_URL = __WEBPACK_IMPORTED_MODULE_4__providers_config__["a" /* API_URL */];
-/**
- * Generated class for the WalksPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
-var WalksPage = /** @class */ (function () {
-    function WalksPage(navCtrl, navParams, modalCtrl, storage, client_provider, events, platform) {
-        //console.log(this.client_provider.client.client_id)
-        this.navCtrl = navCtrl;
-        this.navParams = navParams;
-        this.modalCtrl = modalCtrl;
-        this.storage = storage;
-        this.client_provider = client_provider;
-        this.events = events;
-        this.platform = platform;
-        this.pendingWalks = [];
-        this.completedWalks = [];
-        this.client_id = '8564b56e-fbbc-11e7-b062-dbaa40bb4ff2';
-        //this.loadData()
-        /*this.events.subscribe('client:in', () => {
-          console.log('new_event')
-          //this.loadData()
-          location.reload()
-        })
-    
-        this.events.subscribe('walk:booking', () => {
-          this.navCtrl.setRoot(TrackWalkPage)
-          //this.loadData()
-          location.reload()
-        })*/
-    }
-    WalksPage.prototype.ionViewDidLoad = function () {
-        console.log('ionViewDidLoad WalksPage');
-    };
-    WalksPage.prototype.ionViewDidEnter = function () {
-        // this.client = JSON.parse(localStorage.getItem('client'))
-        // this.pastWalks()
-        // this.notificationsFire()
-        this.client = JSON.parse(localStorage.getItem('client'));
-        if (this.client) {
-            if (this.client.pic != null) {
-                //this.client.pic = 'https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8'
-                this.pastWalks();
-                this.notificationsFire();
-            }
-        }
-        else {
-            this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_8__sign_up_sign_up__["a" /* SignUpPage */], { startPage: 'walks' });
-        }
-    };
-    WalksPage.prototype.ngOnInit = function () {
-        //this.fetchActiveWalks()
-        //this.loadData()
-    };
-    WalksPage.prototype.loadData = function () {
-        var _this = this;
-        this.platform.ready()
-            .then(function () {
-            _this.storage.get('client')
-                .then(function (val) {
-                _this.client = val;
-                console.log(_this.client);
-                _this.client_id = val.client_id;
-                console.log(_this.client_id);
-                //this.fetchActiveWalks()
-                //this.fetchCompletedWalks()
-                _this.notificationsFire();
-                _this.pastWalks();
-            })
-                .catch(function (err) { return console.log(err); });
-        })
-            .catch(function (err) { return console.log(err); });
-    };
-    WalksPage.prototype.notificationsFire = function () {
-        var _this = this;
-        var firestore = __WEBPACK_IMPORTED_MODULE_7_firebase__["firestore"]();
-        firestore.collection('walks').where('client_id', '==', "" + this.client.client_id).where('pending', '==', true)
-            .get()
-            .then(function (snapshot) {
-            snapshot.forEach(function (doc) {
-                console.log(doc.id);
-                console.log(doc.data());
-                _this.pendingWalks.push(doc.data());
-            });
-        })
-            .catch(function (err) { return console.log(err); });
-    };
-    WalksPage.prototype.fetchActiveWalks = function () {
-        var _this = this;
-        __WEBPACK_IMPORTED_MODULE_3_axios___default.a.get(API_URL + ("walks?client_id=" + this.client.client_id)) //walker_id
-            .then(function (res) {
-            _this.pendingWalks = res.data;
-        })
-            .catch(function (err) {
-            console.log(err);
-        });
-    };
-    WalksPage.prototype.fetchCompletedWalks = function () {
-        var _this = this;
-        __WEBPACK_IMPORTED_MODULE_3_axios___default.a.get(API_URL + ("completed_walks?client_id=" + this.client.client_id)) //walker_id
-            .then(function (res) {
-            _this.completedWalks = res.data;
-        })
-            .catch(function (err) {
-            console.log(err);
-        });
-    };
-    WalksPage.prototype.pastWalks = function () {
-        var _this = this;
-        var firestore = __WEBPACK_IMPORTED_MODULE_7_firebase__["firestore"]();
-        firestore.collection('walks').where('client_id', '==', "" + this.client.client_id).where('pending', '==', false)
-            .get()
-            .then(function (snapshot) {
-            snapshot.forEach(function (doc) {
-                console.log(doc.id);
-                console.log(doc.data());
-                _this.completedWalks.push(doc.data());
-            });
-        })
-            .catch(function (err) { return console.log(err); });
-    };
-    WalksPage.prototype.review = function (walk) {
-        //this.storage.set('walk', walk)
-        localStorage.setItem('walk', JSON.stringify(walk));
-        console.log(walk);
-        var reviewModal = this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_6__report_report__["a" /* ReportPage */]);
-        //reviewModal.present()
-    };
-    WalksPage.prototype.track = function (event, request) {
-        event.stopPropagation();
-        //this.storage.set('request', request)
-        localStorage.setItem('request', JSON.stringify(request));
-        var trackWalkModal = this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_5__track_walk_track_walk__["a" /* TrackWalkPage */]);
-        //trackWalkModal.present()
-    };
-    WalksPage.prototype.ionViewDidLeave = function () {
-        this.pendingWalks = [];
-        this.completedWalks = [];
-    };
-    WalksPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-walks',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/walks/walks.html"*/'<!--\n  Generated template for the WalksPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>walks</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-list>\n\n		<ion-item-group>\n			<ion-item-divider color=\'light\'> Active & Pending Walks </ion-item-divider>\n				<ion-item *ngFor="let walk of pendingWalks" (click)="openRequest(notif)">\n					 <ion-avatar item-start>\n		      			<img [src]="walk?.pet.pic">\n		    		</ion-avatar>\n					<p>{{ walk?.time }}</p>\n					<p>{{ walk?.pickUp }}</p>\n					<button item-content ion-button round color="danger" item-end (click)="track($event, walk)"> TRACK </button>\n				</ion-item>\n				<ion-item-options side="right">\n\n		    	</ion-item-options>\n	    </ion-item-group>\n\n\n	    <ion-item-group>\n			<ion-item-divider color=\'light\'> Past Walks </ion-item-divider>\n				<ion-item *ngFor="let walk of completedWalks" (click)="review(walk)">\n					 <ion-avatar item-start>\n		      			<img [src]="walk?.pet.pic">\n		    		</ion-avatar>\n					<p>{{ walk?.time }}</p>\n					<p>{{ walk?.pickUp }}</p>\n					<!--<button item-content ion-button round color="danger" item-end (click)="walkIntention($event)"> TRACK </button>-->\n				</ion-item>\n				<ion-item-options side="right">\n\n		    	</ion-item-options>\n	    </ion-item-group>\n	\n	</ion-list>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/walks/walks.html"*/,
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */],
-            __WEBPACK_IMPORTED_MODULE_2__ionic_storage__["b" /* Storage */],
-            __WEBPACK_IMPORTED_MODULE_10__providers_client_client__["a" /* ClientProvider */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["b" /* Events */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* Platform */]])
-    ], WalksPage);
-    return WalksPage;
-}());
-
-//# sourceMappingURL=walks.js.map
-
-/***/ }),
-
-/***/ 115:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ProfilePage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__pet_pet__ = __webpack_require__(75);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__settings_settings__ = __webpack_require__(136);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__sign_up_sign_up__ = __webpack_require__(76);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_firebase__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_firestore__ = __webpack_require__(42);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-
-
-
-var ProfilePage = /** @class */ (function () {
-    function ProfilePage(navCtrl, modalCtrl) {
-        this.navCtrl = navCtrl;
-        this.modalCtrl = modalCtrl;
-        this.client = {
-            pic: 'https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8',
-            name: 'Fullname',
-            email: 'Your email',
-        };
-        this.pic = 'https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8';
-        this.walks = 0;
-    }
-    ProfilePage.prototype.ionViewDidEnter = function () {
-        this.client = JSON.parse(localStorage.getItem('client'));
-        if (this.client) {
-            if (this.client.pic != null) {
-                //this.client.pic = 'https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8'
-                this.pic = this.client.pic;
-                this.numberOfPets();
-            }
-        }
-        else {
-            this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_4__sign_up_sign_up__["a" /* SignUpPage */], { startPage: 'profile' });
-        }
-    };
-    ProfilePage.prototype.numberOfPets = function () {
-        var pets = JSON.parse(localStorage.getItem('pets'));
-        this.pets = pets.length;
-    };
-    ProfilePage.prototype.addPet = function () {
-        var petModal = this.modalCtrl.create(__WEBPACK_IMPORTED_MODULE_2__pet_pet__["a" /* PetPage */]);
-        petModal.present();
-    };
-    ProfilePage.prototype.settings = function () {
-        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_3__settings_settings__["a" /* SettingsPage */]);
-        //settingsModal.present()
-    };
-    ProfilePage.prototype.picChosen = function (event) {
-        var _this = this;
-        var _id = (Date.now()).toString();
-        var imageRef = __WEBPACK_IMPORTED_MODULE_5_firebase__["storage"]().ref().child(_id);
-        var file = event.target.files[0];
-        var reader = new FileReader();
-        reader.onload = function (event) {
-            _this.pic = reader.result;
-            imageRef.putString(_this.pic, 'data_url')
-                .then(function (snap) {
-                //this.pic = snap.downloadURL
-                _this.client.pic = snap.downloadURL;
-                localStorage.setItem('client', JSON.stringify(_this.client));
-            })
-                .catch(function (err) { return console.log(err); });
-        };
-        reader.readAsDataURL(file);
-    };
-    ProfilePage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-profile',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/profile/profile.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title text-center>\n      My Profile\n    </ion-title>\n\n    <ion-buttons end>\n\n      <button ion-button icon-only (click)="settings()">\n        <ion-icon name="more"></ion-icon>\n      </button>\n    </ion-buttons>\n  </ion-navbar>\n</ion-header>\n\n<ion-content>\n  <div class="profile-container" padding>\n  <ion-list>\n    <!--<img [src]="client?.pic" class="profile-image" />-->\n	<div>\n		<label for="image_upload"> \n			<img [src]="pic"  class="profile-image"/>\n		</label>\n		<input name="image_upload" type="file" id="image_upload" style="display: none;" (change)="picChosen($event)">\n		<!--<img [src]="pic" width="90px" class="pet-pic" (click)="choosePic()"/>-->\n	</div>\n    <p text-center>\n      <span class="name">{{client?.name}}</span>\n      <br/>\n      <span class="email">{{client?.email}}</span>\n    </p>\n  </ion-list>\n  </div>\n\n<!--\n  <ion-row [ngStyle]="{\'background-color\': \'#F2F2F2\'}" padding>\n      <ion-col text-center no-padding col-3>\n        <img src="assets/imgs/walker-icon.png" width="35px" />\n      </ion-col>\n      <ion-col text-left no-padding col-7>\n        <p>Become a Walker</p>\n      </ion-col>\n      <ion-col text-right no-padding col-2>\n        <img src="assets/imgs/plus-icon.png" width="35px" />\n      </ion-col>\n  </ion-row>\n-->\n\n    <ion-row [ngStyle]="{\'background-color\': \'#FFFFFF\'}" padding>\n\n      <ion-col text-center padding col-4>\n        <ion-row>\n          <ion-col col-12>\n              <span class="text-bold stats-num">{{pets}}</span>\n          </ion-col>\n          <ion-col col-12>\n            <span class="brown stats-label">My Pets</span>\n          </ion-col>\n        </ion-row>\n      </ion-col>\n\n      <ion-col text-left padding col-8 [ngStyle]="{\'border-left\': \'1px solid #EDEDED\'}">\n        <ion-row>\n          <ion-col col-12>\n            <span class="text-bold stats-num">{{walks}}</span>\n          </ion-col>\n          <ion-col col-12>\n            <span class="gray stats-label">Appointments</span>\n          </ion-col>\n        </ion-row>\n      </ion-col>\n\n    </ion-row>\n\n    <ion-row [ngStyle]="{\'background-color\': \'#F2F2F2\'}" padding>\n      <ion-col text-center no-padding col-3>\n        <img src="assets/imgs/pet-icon.png" height="40px" />\n      </ion-col>\n      <ion-col text-left no-padding col-7>\n        <p>Add a pet</p>\n      </ion-col>\n      <ion-col text-right no-padding col-2>\n        <div tappable (click)="addPet()">\n          <img src="assets/imgs/plus-icon.png" width="35px"/>\n        </div>\n      </ion-col>\n    </ion-row>\n\n    <ion-row [ngStyle]="{\'background-color\': \'#ffffff\', \'text-align\' : \'center\'}" padding *ngIf="pets == 0" >\n      <ion-col>\n        No pets in the list!\n      </ion-col>\n    </ion-row>\n\n    <ion-row [ngStyle]="{\'background-color\': \'#ffffff\'}" padding >\n      <ion-col text-center no-padding col-3>\n        <img src="assets/imgs/snowball.png" width="90px" class="pet-pic"/>\n      </ion-col>\n      <ion-col text-left no-padding col-6>\n        <p>Snowball<br>\n        <span class="last-walk">Last walk Dec 3, 2016</span>\n      </p>\n      </ion-col>\n      <ion-col text-right no-padding col-3>\n        <p>5 Walks</p>\n      </ion-col>\n    </ion-row>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/profile/profile.html"*/
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */]])
-    ], ProfilePage);
-    return ProfilePage;
-}());
-
-//# sourceMappingURL=profile.js.map
-
-/***/ }),
-
-/***/ 136:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SettingsPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editprofile_editprofile__ = __webpack_require__(227);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__pets_pets__ = __webpack_require__(228);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-/**
- * Generated class for the SettingsPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
-var SettingsPage = /** @class */ (function () {
-    function SettingsPage(navCtrl, navParams) {
-        this.navCtrl = navCtrl;
-        this.navParams = navParams;
-    }
-    SettingsPage.prototype.ionViewDidLoad = function () {
-        console.log('ionViewDidLoad SettingsPage');
-    };
-    SettingsPage.prototype.edit = function () {
-        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_2__editprofile_editprofile__["a" /* EditprofilePage */]);
-    };
-    SettingsPage.prototype.pets = function () {
-        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_3__pets_pets__["a" /* PetsPage */]);
-    };
-    SettingsPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-settings',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/settings/settings.html"*/'<!--\n  Generated template for the SettingsPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>settings</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-list>\n\n		<ion-item-group>\n    		<ion-item-divider color="yellow">My Account</ion-item-divider>\n    		<button ion-item (click)="edit()">Edit Profile</button>\n    		<button ion-item>Payment Method</button>\n    		<button ion-item>Bill Information</button>\n  		</ion-item-group>\n\n\n		<ion-item-group>\n    		<ion-item-divider color="yellow">Pets</ion-item-divider>\n    		<button ion-item (click)="pets()">Your Pets</button>\n    	</ion-item-group>\n\n		<ion-item-group>\n    		<ion-item-divider color="yellow">Information</ion-item-divider>\n    		<ion-item>Contact Us: +1 800 556 7898</ion-item>\n    		<ion-item><a href="udogapp.com">Buy seasonal costumes for your furry friend</a></ion-item>\n  		</ion-item-group>\n\n	</ion-list>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/settings/settings.html"*/,
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]])
-    ], SettingsPage);
-    return SettingsPage;
-}());
-
-//# sourceMappingURL=settings.js.map
-
-/***/ }),
-
-/***/ 137:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ReportPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_platform_browser__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__tabs_tabs__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_firebase__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_firestore__ = __webpack_require__(42);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-
-
-
-/**
- * Generated class for the ReportPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
-var ReportPage = /** @class */ (function () {
-    function ReportPage(navCtrl, navParams, sanitizer, viewCtrl, storage, modalCtrl) {
-        this.navCtrl = navCtrl;
-        this.navParams = navParams;
-        this.sanitizer = sanitizer;
-        this.viewCtrl = viewCtrl;
-        this.storage = storage;
-        this.modalCtrl = modalCtrl;
-        this.rate = 5;
-    }
-    ReportPage.prototype.getSanitizeUrl = function (url) {
-        return this.sanitizer.bypassSecurityTrustUrl(url);
-    };
-    ReportPage.prototype.ionViewDidLoad = function () {
-        console.log('ionViewDidLoad ReportPage');
-        //this.loadData()
-    };
-    ReportPage.prototype.ionViewDidEnter = function () {
-        this.loadData();
-    };
-    ReportPage.prototype.loadData = function () {
-        this.walk = JSON.parse(localStorage.getItem('walk'));
-        this.rate = this.walk.rate;
-        console.log(this.rate);
-    };
-    ReportPage.prototype.submit = function () {
-        console.log(this.rate);
-        var walkRef = __WEBPACK_IMPORTED_MODULE_5_firebase__["firestore"]().collection('walks').doc("" + this.walk.id)
-            .update({
-            rating: this.rate
-        })
-            .then(function () {
-            console.log('update success');
-        })
-            .catch(function (err) { return console.log(err); });
-        this.viewCtrl.dismiss();
-        this.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_3__tabs_tabs__["a" /* TabsPage */]);
-    };
-    ReportPage.prototype.continue = function () {
-        //let rateModal = this.modalCtrl.create(RateWalkPage)
-        //rateModal.present()
-        this.viewCtrl.dismiss();
-        this.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_3__tabs_tabs__["a" /* TabsPage */]);
-    };
-    __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_9" /* ViewChild */])('map'),
-        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_0__angular_core__["u" /* ElementRef */])
-    ], ReportPage.prototype, "mapElement", void 0);
-    ReportPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-report',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/report/report.html"*/'<!--\n  Generated template for the ReportPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>report</ion-title>\n\n    <!--<ion-buttons end>\n\n      <button ion-button (click)="submit()"> SAVE </button>\n\n    </ion-buttons>-->\n\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<!--<div #map id = "map"></div>-->\n\n	<!--<img src="https://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=600x300&maptype=roadmap\n&markers=color:blue%7Clabel:S%7C40.702147,-74.015794&markers=color:green%7Clabel:G%7C40.711614,-74.012318\n&markers=color:red%7Clabel:C%7C40.718217,-73.998284\n&key=AIzaSyBgI_KhX2VYMgTTsJAJdlnLWdeD0Ce4DaQ"/> -->\n\n	<ion-item-divider color="yellow"> \n\n		<p text-center> Finished the walk! </p>\n\n	</ion-item-divider>\n\n	<ion-row>\n\n			<div class="activity"> \n				<p> Your Dog :</p> \n				<ion-row class="pee-row">\n					<div class="pee-pic">\n					<img src="assets/imgs/pee.svg" />\n					</div>\n					<div class="pee-info">\n					<p> Pee {{walk?.walknotes.pee }} times </p>\n					</div>\n					<div class="pee-type">\n						<p>(Good)</p>\n					</div>\n				</ion-row>\n				<ion-row class="poo-row">\n					<div class="poo-pic">\n					<img src="assets/imgs/poo.svg" />\n					</div>\n					<div class="poo-info">\n					<p> Poo {{walk?.walknotes.poo }} times </p>\n					</div>\n					<div class="poo-type">\n						<p>(Good)</p>\n					</div>\n				</ion-row>\n			</div>\n\n	</ion-row>\n\n	<ion-row>\n\n		<div>\n\n				<p text-center> Observations: </p>\n\n				<p align="center" class="observations">  {{walk?.walknotes.comments }}  </p>\n\n		</div>\n\n\n	</ion-row>\n\n	<ion-row padding>\n\n	\n				<img [src]="walk?.walker.pic"  class="profile-image"/>\n\n				<p text-center>  You rated {{walk?.walker.name }} </p>\n\n				<rating [(ngModel)]="rate" \n			        readOnly="true" \n			        max="5" \n			        emptyStarIconName="star-outline" \n			        halfStarIconName="star-half" \n			        starIconName="star" \n			        nullable="false">        	\n			     </rating>\n\n	</ion-row> \n\n	<ion-row padding> <a> Tell a friend about us and get $25 Off </a> </ion-row>\n\n	<ion-row padding> <a> Would you like to help feed homeless dogs </a> </ion-row>\n\n	<ion-row padding>\n\n		<ion-col col-6 offset-3>\n				<button ion-button color="orange" (click)="continue()" round> Done </button>\n		</ion-col>\n\n	</ion-row>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/report/report.html"*/,
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_platform_browser__["c" /* DomSanitizer */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* ViewController */],
-            __WEBPACK_IMPORTED_MODULE_4__ionic_storage__["b" /* Storage */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */]])
-    ], ReportPage);
-    return ReportPage;
-}());
-
-//# sourceMappingURL=report.js.map
-
-/***/ }),
-
-/***/ 138:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return RateWalkPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__tabs_tabs__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__firebase_firestore__ = __webpack_require__(42);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-
-/**
- * Generated class for the RateWalkPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
-var RateWalkPage = /** @class */ (function () {
-    function RateWalkPage(navCtrl, navParams, viewCtrl) {
-        this.navCtrl = navCtrl;
-        this.navParams = navParams;
-        this.viewCtrl = viewCtrl;
-    }
-    RateWalkPage.prototype.ionViewDidEnter = function () {
-        this.request = JSON.parse(localStorage.getItem('request'));
-    };
-    RateWalkPage.prototype.ionViewDidLoad = function () {
-        console.log('ionViewDidLoad RateWalkPage');
-    };
-    RateWalkPage.prototype.send = function () {
-        var _this = this;
-        __WEBPACK_IMPORTED_MODULE_3_firebase__["firestore"]()
-            .collection('walks')
-            .doc("" + this.request.id)
-            .update({
-            rate: this.rate,
-            comments: this.comments,
-            rated: true,
-        })
-            .then(function () {
-            console.log('update success');
-            _this.viewCtrl.dismiss();
-            _this.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_2__tabs_tabs__["a" /* TabsPage */]);
-        })
-            .catch(function (err) { return console.log(err); });
-        //this.viewCtrl.dismiss()
-        //this.navCtrl.goToRoot()
-        //localStorage.removeItem('request')
-    };
-    RateWalkPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-rate-walk',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/rate-walk/rate-walk.html"*/'<!--\n  Generated template for the RateWalkPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>RateWalk</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n\n	<ion-item-divider color="yellow"> \n\n		<p text-center> REVIEW THE WALKER </p>\n\n	</ion-item-divider>\n\n	<br>\n	<br>\n\n\n	<ion-row>\n\n		<img [src]="request?.walker.pic" class="profile-image"  />\n\n\n	</ion-row>\n\n	<ion-row>\n\n		<ion-label text-center> {{ request?.walker.name }} </ion-label>\n\n	</ion-row>\n\n	<br>\n	<br>\n\n	<ion-row>\n\n\n		<ion-label text-center> Review the Walker </ion-label>\n\n	</ion-row>\n\n	<ion-row>\n\n		<rating [(ngModel)]="rate" \n	        readOnly="false" \n	        max="5" \n	        emptyStarIconName="star-outline" \n	        halfStarIconName="star-half" \n	        starIconName="star" \n	        nullable="false">        	\n		</rating>\n\n	</ion-row>\n\n		<div class="text-container">\n	<ion-row class="text">\n\n		\n			<textarea rows="3" type="text" [(ngModel)]="comments" placeholder="Write a comment" [ngStyle]="{\'width\':\'90%\' }"></textarea> \n		\n\n	</ion-row>\n</div>\n\n\n		<div class="button-container">\n	<ion-row padding>\n\n		<ion-col >\n				<button ion-button color="orange" (click)="send()" round>SEND</button>\n		</ion-col>\n\n	</ion-row>\n</div>\n\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/rate-walk/rate-walk.html"*/,
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* ViewController */]])
-    ], RateWalkPage);
-    return RateWalkPage;
-}());
-
-//# sourceMappingURL=rate-walk.js.map
-
-/***/ }),
-
-/***/ 184:
+/***/ 116:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1010,14 +37,14 @@ var ClientProvider = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 226:
+/***/ 147:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AddressPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(12);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1062,13 +89,13 @@ var AddressPage = /** @class */ (function () {
     };
     AddressPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-address',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/address/address.html"*/'<!--\n  Generated template for the AddressPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>address</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n		<ion-row>\n\n			<ion-item>\n				<ion-input type="text" [(ngModel)]="address"></ion-input><ion-icon name="navigate" item-right>\n				</ion-icon>\n			</ion-item>\n		</ion-row>\n\n		<ion-row>\n\n			<ion-item>\n				\n				<ion-input type="text" [(ngModel)]="unit" placeholder="add unit number" ></ion-input>\n			</ion-item>\n		</ion-row>\n\n		<ion-row>\n			<ion-col col-3><ion-label> State </ion-label></ion-col>\n			<ion-col col-6><ion-select>\n\n				<ion-option value="bulldog"> NY </ion-option>\n				<ion-option value="terrier"> FL </ion-option>\n\n			</ion-select></ion-col>\n			<ion-col col-3>\n				<ion-input type="text" [(ngModel)]="zipCode" value="" placeholder="zip" ></ion-input>\n			</ion-col>\n		</ion-row>\n\n		<ion-row>	\n			<button ion-button color="orange" block (click)="continue()"> Continue </button>\n		</ion-row>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/address/address.html"*/,
+            selector: 'page-address',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/address/address.html"*/'<!--\n  Generated template for the AddressPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>address</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n		<ion-row>\n\n			<ion-item>\n				<ion-input type="text" [(ngModel)]="address"></ion-input><ion-icon name="navigate" item-right>\n				</ion-icon>\n			</ion-item>\n		</ion-row>\n\n		<ion-row>\n\n			<ion-item>\n				\n				<ion-input type="text" [(ngModel)]="unit" placeholder="add unit number" ></ion-input>\n			</ion-item>\n		</ion-row>\n\n		<ion-row>\n			<ion-col col-3><ion-label> State </ion-label></ion-col>\n			<ion-col col-6><ion-select>\n\n				<ion-option value="bulldog"> NY </ion-option>\n				<ion-option value="terrier"> FL </ion-option>\n\n			</ion-select></ion-col>\n			<ion-col col-3>\n				<ion-input type="text" [(ngModel)]="zipCode" value="" placeholder="zip" ></ion-input>\n			</ion-col>\n		</ion-row>\n\n		<ion-row>	\n			<button ion-button color="orange" block (click)="continue()"> Continue </button>\n		</ion-row>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/address/address.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
             __WEBPACK_IMPORTED_MODULE_2__ionic_storage__["b" /* Storage */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["b" /* Events */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* ViewController */]])
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["m" /* ViewController */]])
     ], AddressPage);
     return AddressPage;
 }());
@@ -1077,16 +104,17 @@ var AddressPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 227:
+/***/ 148:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return EditprofilePage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_firebase__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_firebase__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__firebase_firestore__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3__firebase_firestore__);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1137,7 +165,7 @@ var EditprofilePage = /** @class */ (function () {
     };
     EditprofilePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-editprofile',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/editprofile/editprofile.html"*/'<!--\n  Generated template for the EditprofilePage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>editprofile</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n\n	<ion-item>\n\n		<ion-label floating>Phone <ion-icon name="call"></ion-icon></ion-label>\n		<ion-input type="text" [(ngModel)]="phone"></ion-input>\n\n	</ion-item>\n\n		<ion-item>\n\n			<ion-label floating>Email <ion-icon name="mail"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="email"></ion-input>\n\n		</ion-item>\n\n		<ion-item>\n\n			<ion-label floating>Address <ion-icon name="home"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="address"></ion-input>\n\n		</ion-item>\n\n		<ion-row padding>\n			<ion-col col-3><ion-label> State </ion-label></ion-col>\n			<ion-col col-6><ion-select [(ngModel)]="state">\n\n				<ion-option value="NY"> NY </ion-option>\n				<ion-option value="FL"> FL </ion-option>\n\n			</ion-select></ion-col>\n			<ion-col col-3>\n				<ion-input type="text" [(ngModel)]="zip" value="" placeholder="zip" ></ion-input>\n			</ion-col>\n		</ion-row>\n\n				<br/>\n		<br/>\n	<ion-row>\n		<button ion-button color="orange" block round (click)="save()"> Save </button>\n	</ion-row>\n	<br/><br/>\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/editprofile/editprofile.html"*/,
+            selector: 'page-editprofile',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/editprofile/editprofile.html"*/'<!--\n  Generated template for the EditprofilePage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>editprofile</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n\n	<ion-item>\n\n		<ion-label floating>Phone <ion-icon name="call"></ion-icon></ion-label>\n		<ion-input type="text" [(ngModel)]="phone"></ion-input>\n\n	</ion-item>\n\n		<ion-item>\n\n			<ion-label floating>Email <ion-icon name="mail"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="email"></ion-input>\n\n		</ion-item>\n\n		<ion-item>\n\n			<ion-label floating>Address <ion-icon name="home"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="address"></ion-input>\n\n		</ion-item>\n\n		<ion-row padding>\n			<ion-col col-3><ion-label> State </ion-label></ion-col>\n			<ion-col col-6><ion-select [(ngModel)]="state">\n\n				<ion-option value="NY"> NY </ion-option>\n				<ion-option value="FL"> FL </ion-option>\n\n			</ion-select></ion-col>\n			<ion-col col-3>\n				<ion-input type="text" [(ngModel)]="zip" value="" placeholder="zip" ></ion-input>\n			</ion-col>\n		</ion-row>\n\n				<br/>\n		<br/>\n	<ion-row>\n		<button ion-button color="orange" block round (click)="save()"> Save </button>\n	</ion-row>\n	<br/><br/>\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/editprofile/editprofile.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]])
     ], EditprofilePage);
@@ -1148,13 +176,13 @@ var EditprofilePage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 228:
+/***/ 149:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return PetsPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1189,7 +217,7 @@ var PetsPage = /** @class */ (function () {
     };
     PetsPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-pets',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/pets/pets.html"*/'<!--\n  Generated template for the PetsPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n		<ion-navbar>\n			<ion-title>pets</ion-title>\n		</ion-navbar>\n	\n	</ion-header>\n	\n	\n	<ion-content padding>\n	\n		<ion-list>\n	\n			<ion-item-group>\n					<ion-item *ngFor="let pet of pets">\n						 <ion-avatar item-start>\n									<img [src]="pet?.pic">\n							</ion-avatar>\n						<p>{{ pet?.name }}</p>\n						<!--<button item-content ion-button round color="danger" item-end (click)="track($event, walk)"> TRACK </button>-->\n					</ion-item>\n					<ion-item-options side="right">\n	\n						</ion-item-options>\n				</ion-item-group>\n			\n		</ion-list>\n	\n	</ion-content>'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/pets/pets.html"*/,
+            selector: 'page-pets',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/pets/pets.html"*/'<!--\n  Generated template for the PetsPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n		<ion-navbar>\n			<ion-title>pets</ion-title>\n		</ion-navbar>\n	\n	</ion-header>\n	\n	\n	<ion-content padding>\n	\n		<ion-list>\n	\n			<ion-item-group>\n					<ion-item *ngFor="let pet of pets">\n						 <ion-avatar item-start>\n									<img [src]="pet?.pic">\n							</ion-avatar>\n						<p>{{ pet?.name }}</p>\n						<!--<button item-content ion-button round color="danger" item-end (click)="track($event, walk)"> TRACK </button>-->\n					</ion-item>\n					<ion-item-options side="right">\n	\n						</ion-item-options>\n				</ion-item-group>\n			\n		</ion-list>\n	\n	</ion-content>'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/pets/pets.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]])
     ], PetsPage);
@@ -1200,23 +228,23 @@ var PetsPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 229:
+/***/ 150:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return VerifyPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_axios__ = __webpack_require__(121);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_axios__ = __webpack_require__(72);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_axios__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__register_register__ = __webpack_require__(230);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__pet_pet__ = __webpack_require__(75);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__card_card__ = __webpack_require__(74);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__profile_profile__ = __webpack_require__(115);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__walks_walks__ = __webpack_require__(102);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__providers_config__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_firebase__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__register_register__ = __webpack_require__(151);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__pet_pet__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__card_card__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__profile_profile__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__walks_walks__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__providers_config__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_firebase__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_10_firebase__);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1317,7 +345,7 @@ var VerifyPage = /** @class */ (function () {
     };
     VerifyPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-verify',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/verify/verify.html"*/'<!--\n  Generated template for the VerifyPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n	<ion-navbar>\n		<ion-title>verify</ion-title>\n	</ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-row>\n		<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n	</ion-row>\n\n	<ion-row padding>\n\n		<ion-item>\n\n			<ion-label floating>CODE </ion-label>\n			<ion-input type="text" [(ngModel)]="code"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n	<ion-row padding>\n\n		<button ion-button color="orange" block round (click)="verify()"> VERIFY </button>\n\n	</ion-row>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/verify/verify.html"*/,
+            selector: 'page-verify',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/verify/verify.html"*/'<!--\n  Generated template for the VerifyPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n	<ion-navbar>\n		<ion-title>verify</ion-title>\n	</ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-row>\n		<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n	</ion-row>\n\n	<ion-row padding>\n\n		<ion-item>\n\n			<ion-label floating>CODE </ion-label>\n			<ion-input type="text" [(ngModel)]="code"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n	<ion-row padding>\n\n		<button ion-button color="orange" block round (click)="verify()"> VERIFY </button>\n\n	</ion-row>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/verify/verify.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
@@ -1331,20 +359,21 @@ var VerifyPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 230:
+/***/ 151:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return RegisterPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__pet_pet__ = __webpack_require__(75);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__profile_profile__ = __webpack_require__(115);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__walks_walks__ = __webpack_require__(102);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_firebase__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__pet_pet__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__profile_profile__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__walks_walks__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_firebase__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__firebase_firestore__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7__firebase_firestore__);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1422,7 +451,7 @@ var RegisterPage = /** @class */ (function () {
     };
     RegisterPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-register',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/register/register.html"*/'<!--\n  Generated template for the RegisterPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>register</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n\n		<ion-row>\n			<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n		</ion-row>\n\n\n		<ion-item>\n\n			<ion-label floating>Full Name <ion-icon name="person"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="name"></ion-input>\n\n		</ion-item>\n\n		<ion-item>\n\n			<ion-label floating>Email <ion-icon name="mail"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="email"></ion-input>\n\n		</ion-item>\n\n		<ion-item>\n\n			<ion-label floating>Address <ion-icon name="home"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="address"></ion-input>\n\n		</ion-item>\n\n		<ion-row padding>\n			<ion-col col-3><ion-label> State </ion-label></ion-col>\n			<ion-col col-6><ion-select [(ngModel)]="state">\n\n				<ion-option value="NY"> NY </ion-option>\n				<ion-option value="FL"> FL </ion-option>\n\n			</ion-select></ion-col>\n			<ion-col col-3>\n				<ion-input type="text" [(ngModel)]="zip" value="" placeholder="zip" ></ion-input>\n			</ion-col>\n		</ion-row>\n\n				<br/>\n		<br/>\n	<ion-row>\n		<button ion-button color="orange" block round (click)="register()"> Continue </button>\n	</ion-row>\n	<br/><br/>\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/register/register.html"*/,
+            selector: 'page-register',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/register/register.html"*/'<!--\n  Generated template for the RegisterPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>register</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n\n		<ion-row>\n			<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n		</ion-row>\n\n\n		<ion-item>\n\n			<ion-label floating>Full Name <ion-icon name="person"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="name"></ion-input>\n\n		</ion-item>\n\n		<ion-item>\n\n			<ion-label floating>Email <ion-icon name="mail"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="email"></ion-input>\n\n		</ion-item>\n\n		<ion-item>\n\n			<ion-label floating>Address <ion-icon name="home"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="address"></ion-input>\n\n		</ion-item>\n\n		<ion-row padding>\n			<ion-col col-3><ion-label> State </ion-label></ion-col>\n			<ion-col col-6><ion-select [(ngModel)]="state">\n\n				<ion-option value="NY"> NY </ion-option>\n				<ion-option value="FL"> FL </ion-option>\n\n			</ion-select></ion-col>\n			<ion-col col-3>\n				<ion-input type="text" [(ngModel)]="zip" value="" placeholder="zip" ></ion-input>\n			</ion-col>\n		</ion-row>\n\n				<br/>\n		<br/>\n	<ion-row>\n		<button ion-button color="orange" block round (click)="register()"> Continue </button>\n	</ion-row>\n	<br/><br/>\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/register/register.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
@@ -1436,24 +465,25 @@ var RegisterPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 231:
+/***/ 152:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WalkerPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__book_walk_book_walk__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__sign_up_sign_up__ = __webpack_require__(76);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__angular_platform_browser__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__pet_pet__ = __webpack_require__(75);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__card_card__ = __webpack_require__(74);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__ionic_native_social_sharing__ = __webpack_require__(185);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_angularfire2_database__ = __webpack_require__(310);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_angularfire2_firestore__ = __webpack_require__(201);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_rxjs_add_operator_map__ = __webpack_require__(195);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__book_walk_book_walk__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__sign_up_sign_up__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__angular_platform_browser__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__pet_pet__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__card_card__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_angularfire2_auth__ = __webpack_require__(222);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_angularfire2_database__ = __webpack_require__(231);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_angularfire2_firestore__ = __webpack_require__(242);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_rxjs_add_operator_map__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_11_rxjs_add_operator_map__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__ionic_native_social_sharing__ = __webpack_require__(125);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1475,6 +505,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 /**
  * Generated class for the WalkerPage page.
  *
@@ -1482,7 +513,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
  * Ionic pages and navigation.
  */
 var WalkerPage = /** @class */ (function () {
-    function WalkerPage(navCtrl, navParams, storage, sanitizer, socialsharing, afDatabase, afs) {
+    function WalkerPage(fireauth, navCtrl, navParams, storage, sanitizer, socialsharing, afDatabase, afs) {
+        this.fireauth = fireauth;
         this.navCtrl = navCtrl;
         this.navParams = navParams;
         this.storage = storage;
@@ -1494,28 +526,26 @@ var WalkerPage = /** @class */ (function () {
             name: '',
             about: '',
             video: '',
-            trust: '',
-            pic: ''
+            trust: ''
         };
+        //    this.username = fireauth.auth.currentUser.email;
     }
     WalkerPage.prototype.ngOnInit = function () {
         /*this.storage.get('selectedWalker')
           .then((val) => {
               this.walker = val
           })*/
-        this.walker = JSON.parse(localStorage.getItem('selectedWalker'));
-        console.log(this.walker);
-    };
-    WalkerPage.prototype.getSanitizeUrl = function (url) {
-        return this.sanitizer.bypassSecurityTrustUrl(url);
+        //      this.walker = JSON.parse(localStorage.getItem('selectedWalker'))
     };
     WalkerPage.prototype.ionViewWillEnter = function () {
         var _this = this;
-        this.itemsCollection = this.afs.collection('walkers', function (ref) { return ref.where('email', '==', 'dzonga@udogapp.com'); });
+        this.walker = JSON.parse(localStorage.getItem('walker'));
+        //	   console.log('walker'+this.walker.walker_id);
+        this.itemsCollection = this.afs.collection('walkers', function (ref) { return ref.where('walker_id', '==', _this.walker.walker_id); });
         this.items = this.itemsCollection.valueChanges();
-        this.items.subscribe(function (item) {
-            _this.walker.name = item[0].first_name;
-        });
+    };
+    WalkerPage.prototype.getSanitizeUrl = function (url) {
+        return this.sanitizer.bypassSecurityTrustUrl(url);
     };
     WalkerPage.prototype.ionViewDidLoad = function () {
         console.log('ionViewDidLoad WalkerPage');
@@ -1561,7 +591,7 @@ var WalkerPage = /** @class */ (function () {
             }
         }
         else {
-            this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_4__sign_up_sign_up__["a" /* SignUpPage */], { startPage: 'walker' });
+            this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_4__sign_up_sign_up__["a" /* SignUpPage */]);
         }
     };
     WalkerPage.prototype.contact = function () {
@@ -1580,12 +610,13 @@ var WalkerPage = /** @class */ (function () {
     };
     WalkerPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-walker',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/walker/walker.html"*/'<!--\n\nGenerated template for the WalkerPage page.\n\n\n\nSee http://ionicframework.com/docs/components/#navigation for more info on\n\nIonic pages and navigation.\n\n-->\n\n<ion-header>\n\n\n\n	<ion-navbar style="font-weight: normal;">\n	\n	<ion-title>{{walker.name}}</ion-title>\n	\n	</ion-navbar>\n	\n	\n	\n	</ion-header>\n	\n	\n	\n	\n	\n	<ion-content no-padding style="overflow-y: hidden;">\n	\n	\n	\n		<ion-row>\n	\n			<ion-col col-12>\n	\n	\n	\n				<div class="walkerVideo">\n	\n					<video controls="controls" poster="https://images.unsplash.com/photo-1490596541415-5afadbfbbf02?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=6648b450dbe757608f0c4ed85eef6256&auto=format&fit=crop&w=1618&q=80" preload="metadata" width="400" webkit-playsinline="webkit-playsinline" class="videoPlayer">\n	\n	\n	\n						<source [src]="walker.video" type="video/webm"/>\n	\n					 </video>\n	\n					 \n	\n					 <!-- <iframe src="https://www.youtube.com/embed/5p_jMOLBhYo?rel=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe> -->\n	\n				\n	\n	\n	\n				<!--<iframe [src]="sanitizer.bypassSecurityTrustUrl(walker.video)" width="400"></iframe>-->\n	\n	\n	\n				<!--<iframe src="https://www.youtube.com/embed/5p_jMOLBhYo?rel=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>-->\n	\n	\n	\n				</div>\n	\n	\n	\n			</ion-col>\n	\n		</ion-row>\n	\n	\n	\n		<ion-row padding class="credentials"\n	\n		>\n	\n		<ion-col text-center col-3>\n	\n			<ion-label style="color: #488aff;" text-wrap>Certificates</ion-label>\n	\n		</ion-col>\n	\n	\n	\n			<!-- <ion-col text-center col-4 [ngStyle]="{\'border-right\': \'2px solid #EDEDED\'}">\n	\n	\n	\n				<ion-label> Certificates \n	\n	\n	\n				</ion-label> -->\n	\n	\n	\n			\n	\n	\n	\n			<ion-col text-center col-3 [ngStyle]="{\'border-right\': \'2px solid #EDEDED\', \'border-left\': \'2px solid #EDEDED\'}">\n	\n	\n	\n				<ion-label text-wrap> Background Checked \n	\n					<div>\n	\n						<img src="assets/imgs/badge.svg" height="30px" />\n	\n					</div>\n	\n				</ion-label>\n	\n	\n	\n			</ion-col>\n	\n	\n	\n			<ion-col text-center col-3 [ngStyle]="{\'border-right\': \'2px solid #EDEDED\'}">\n	\n	\n	\n				<ion-label text-wrap> Health Insurance \n	\n					<div>\n	\n						<img src="assets/imgs/health.svg" height="30px" />\n	\n					</div>\n	\n	\n	\n				</ion-label>\n	\n	\n	\n			</ion-col>\n	\n	\n	\n			<ion-col text-center col-3>\n	\n				<ion-label style="color:#488aff;" text-wrap> See Ratings \n	\n					<div>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n					</div>\n	\n	\n	\n				</ion-label>\n	\n			</ion-col>\n	\n	\n	\n		</ion-row>\n	\n	\n	\n	\n	\n	\n	\n		<ion-scroll scrollY=true style="width: 100%; height: 20%;" >\n	\n	\n	\n			<ion-row class="info">\n	\n				\n	\n				<ion-col col-12 class="info">\n	\n					<ion-list class="info">\n	\n				\n	\n						<ion-item class="info">\n	\n	\n	\n							<ion-label class="info"> NAME </ion-label>\n	\n							<ion-label class="info"> {{ Items[0].first_name+\' \' | uppercase}} </ion-label>\n	\n	\n	\n						</ion-item>\n	\n	\n	\n	\n	\n						<ion-item class="info">\n	\n	\n	\n							<ion-label class="info"> ABOUT ME </ion-label>\n	\n							<ion-label class="info" text-wrap> {{ walker.about }} </ion-label>\n	\n	\n	\n						</ion-item>\n	\n	\n	\n	\n	\n						<ion-item class="info">\n	\n	\n	\n							<ion-label class="info"> TRUST </ion-label>\n	\n							<ion-label class="info"> {{ walker.trust }} </ion-label>\n	\n	\n	\n						</ion-item>\n	\n	\n	\n	\n	\n					</ion-list> \n	\n				</ion-col>\n	\n	\n	\n			</ion-row>\n	\n	\n	\n		</ion-scroll>\n	\n	\n	\n		<!--\n	\n		<ion-row padding>\n	\n	\n	\n			<button ion-button color="secondary" block round (click)="contact()"> Contact Walker </button>\n	\n	\n	\n		</ion-row>\n	\n	-->\n	\n	\n	\n		<!--\n	\n		 <ion-row>\n	\n	\n	\n			<ion-col col-6>\n	\n			 <button ion-button icon-right outline text-wrap>\n	\n			 Contact Walker \n	\n			 <ion-icon name="call"></ion-icon>\n	\n			 </button>\n	\n			</ion-col>\n	\n	\n	\n			<ion-col col-6>\n	\n		 <button ion-button outline text-wrap (click)="message()">\n	\n		 Message Walker \n	\n		 <ion-icon name="mail"></ion-icon>\n	\n		 </button>\n	\n		   </ion-col>\n	\n	\n	\n	  </ion-row>\n	\n	-->\n	\n	\n	\n		<ion-row padding>\n	\n	\n	\n				<button large ion-button color="orange" (click)="contact()" block round> Ask A question \n	\n					<ion-icon name="mail"></ion-icon>\n	\n				</button>\n	\n	\n	\n		</ion-row>\n	\n	\n	\n	\n		<ion-row padding>\n	\n	\n	\n				<button large ion-button color="orange" (click)="requestWalker()" block round> Request this Walker </button>\n	\n	\n	\n		</ion-row>\n	\n	\n	\n	</ion-content>​\n	\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/walker/walker.html"*/,
+            selector: 'page-walker',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/walker/walker.html"*/'<!--\n\nGenerated template for the WalkerPage page.\n\n\n\nSee http://ionicframework.com/docs/components/#navigation for more info on\n\nIonic pages and navigation.\n\n-->\n\n<ion-header>\n\n\n\n	<ion-navbar style="font-weight: normal;">\n	\n	<ion-title>{{walker.name}}</ion-title>\n	\n	</ion-navbar>\n	\n	\n	\n	</ion-header>\n	\n	\n	\n	\n	\n	<ion-content no-padding style="overflow-y: hidden;">\n	\n	\n	\n		<ion-row>\n	\n			<ion-col col-12>\n	\n				<div *ngFor="let item of items | async" class="walkerVideo">\n	\n					<video controls="controls" poster="https://images.unsplash.com/photo-1490596541415-5afadbfbbf02?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=6648b450dbe757608f0c4ed85eef6256&auto=format&fit=crop&w=1618&q=80" preload="metadata" width="400" webkit-playsinline="webkit-playsinline" class="videoPlayer">\n	\n	\n	\n						<source [src]="item.video" type="video/webm"/>\n	\n					 </video>\n	\n					 \n	\n					 <!-- <iframe src="https://www.youtube.com/embed/5p_jMOLBhYo?rel=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe> -->\n	\n				\n	\n	\n	\n				<!--<iframe [src]="sanitizer.bypassSecurityTrustUrl(walker.video)" width="400"></iframe>-->\n	\n	\n	\n				<!--<iframe src="https://www.youtube.com/embed/5p_jMOLBhYo?rel=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>-->\n	\n	\n	\n				</div>\n	\n	\n	\n			</ion-col>\n	\n		</ion-row>\n	\n	\n	\n		<ion-row padding class="credentials"\n	\n		>\n	\n		<ion-col text-center col-3>\n	\n			<ion-label style="color: #488aff;" text-wrap>Certificates</ion-label>\n	\n		</ion-col>\n	\n	\n	\n			<!-- <ion-col text-center col-4 [ngStyle]="{\'border-right\': \'2px solid #EDEDED\'}">\n	\n	\n	\n				<ion-label> Certificates \n	\n	\n	\n				</ion-label> -->\n	\n	\n	\n			\n	\n	\n	\n			<ion-col text-center col-3 [ngStyle]="{\'border-right\': \'2px solid #EDEDED\', \'border-left\': \'2px solid #EDEDED\'}">\n	\n	\n	\n				<ion-label text-wrap> Background Checked \n	\n					<div>\n	\n						<img src="assets/imgs/badge.svg" height="30px" />\n	\n					</div>\n	\n				</ion-label>\n	\n	\n	\n			</ion-col>\n	\n	\n	\n			<ion-col text-center col-3 [ngStyle]="{\'border-right\': \'2px solid #EDEDED\'}">\n	\n	\n	\n				<ion-label text-wrap> Health Insurance \n	\n					<div>\n	\n						<img src="assets/imgs/health.svg" height="30px" />\n	\n					</div>\n	\n	\n	\n				</ion-label>\n	\n	\n	\n			</ion-col>\n	\n	\n	\n			<ion-col text-center col-3>\n	\n				<ion-label style="color:#488aff;" text-wrap> See Ratings \n	\n					<div>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n						<ion-icon [name]="index < rate ? \'star\' : \'star-outline\'"></ion-icon>\n	\n					</div>\n	\n	\n	\n				</ion-label>\n	\n			</ion-col>\n	\n	\n	\n		</ion-row>\n	\n		<ion-scroll scrollY=true style="width: 100%; height: 20%;" >\n	\n	\n	\n			<ion-row class="info">\n	\n				\n	\n				<ion-col col-12 class="info">\n				\n	\n						<ion-item class="info">\n	\n							<ion-label class="info"> NAME </ion-label>\n	\n							<ion-label *ngFor="let item of items | async" class="info"> {{ item.first_name+\' \'+item.last_name | uppercase}} </ion-label>\n	\n	\n	\n						</ion-item>\n	\n	\n	\n	\n	\n						<ion-item class="info">\n	\n	\n	\n							<ion-label class="info"> ABOUT ME </ion-label>\n	\n							<ion-label *ngFor="let item of items | async" class="info" text-wrap> {{ item.about }} </ion-label>\n	\n	\n	\n						</ion-item>\n	\n	\n	\n	\n	\n						<ion-item class="info">\n	\n	\n	\n							<ion-label class="info"> TRUST </ion-label>\n	\n							<ion-label *ngFor="let item of items | async" class="info"> {{ item.trust }} </ion-label>\n	\n	\n	\n						</ion-item>\n	\n				</ion-col>\n	\n	\n	\n			</ion-row>\n	\n	\n	\n		</ion-scroll>\n	\n	\n	\n		<!--\n	\n		<ion-row padding>\n	\n	\n	\n			<button ion-button color="secondary" block round (click)="contact()"> Contact Walker </button>\n	\n	\n	\n		</ion-row>\n	\n	-->\n	\n	\n	\n		<!--\n	\n		 <ion-row>\n	\n	\n	\n			<ion-col col-6>\n	\n			 <button ion-button icon-right outline text-wrap>\n	\n			 Contact Walker \n	\n			 <ion-icon name="call"></ion-icon>\n	\n			 </button>\n	\n			</ion-col>\n	\n	\n	\n			<ion-col col-6>\n	\n		 <button ion-button outline text-wrap (click)="message()">\n	\n		 Message Walker \n	\n		 <ion-icon name="mail"></ion-icon>\n	\n		 </button>\n	\n		   </ion-col>\n	\n	\n	\n	  </ion-row>\n	\n	-->\n	\n	\n	\n		<ion-row padding>\n	\n	\n	\n				<button large ion-button color="orange" (click)="contact()" block round> Ask A question \n	\n					<ion-icon name="mail"></ion-icon>\n	\n				</button>\n	\n	\n	\n		</ion-row>\n	\n	\n	\n	\n		<ion-row padding>\n	\n	\n	\n				<button large ion-button color="orange" (click)="requestWalker()" block round> Request this Walker </button>\n	\n	\n	\n		</ion-row>\n	\n	\n	\n	</ion-content>​\n	'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/walker/walker.html"*/,
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_8_angularfire2_auth__["a" /* AngularFireAuth */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
             __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */],
             __WEBPACK_IMPORTED_MODULE_5__angular_platform_browser__["c" /* DomSanitizer */],
-            __WEBPACK_IMPORTED_MODULE_8__ionic_native_social_sharing__["a" /* SocialSharing */],
+            __WEBPACK_IMPORTED_MODULE_12__ionic_native_social_sharing__["a" /* SocialSharing */],
             __WEBPACK_IMPORTED_MODULE_9_angularfire2_database__["a" /* AngularFireDatabase */],
             __WEBPACK_IMPORTED_MODULE_10_angularfire2_firestore__["a" /* AngularFirestore */]])
     ], WalkerPage);
@@ -1596,19 +627,20 @@ var WalkerPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 232:
+/***/ 153:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WalkFeedPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_camera__ = __webpack_require__(171);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_platform_browser__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_firebase__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_camera__ = __webpack_require__(114);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_platform_browser__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_firebase__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__firebase_firestore__ = __webpack_require__(42);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_storage__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5__firebase_firestore__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_storage__ = __webpack_require__(12);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1767,7 +799,7 @@ var WalkFeedPage = /** @class */ (function () {
     };
     WalkFeedPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-walk-feed',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/walk-feed/walk-feed.html"*/'<!--\n  Generated template for the WalkFeedPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>WalkFeed</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n    <ion-list no-lines>\n      <ion-item *ngFor="let message of messages" [ngSwitch]="message.type">\n        <p [ngClass]="getStyle(message)" *ngSwitchCase=" \'text\' ">{{ message.txt}}</p>\n		<!--<p [ngClass]="{\'incoming-message\' : message.from == \'walker\' }" *ngSwitchCase=" \'text\' ">{{ message.txt}}</p>-->\n         <img *ngSwitchCase=" \'image\' " [src]="sanitizer.bypassSecurityTrustUrl(message.url)"/> \n      </ion-item>\n    </ion-list>\n\n</ion-content>\n\n<ion-footer padding>\n	<ion-row>\n        <ion-col col-7><input  type="text" [(ngModel)]="newMessage" placeholder="Message..." [ngStyle]="{\'width\':\'90%\' }"/></ion-col>\n        <ion-col col-2>\n        <div>\n          <label for="image_upload">\n                <ion-icon name="camera"></ion-icon>\n          </label>\n            \n          <input name="image_upload" type="file" id="image_upload" style="display: none;" (change)="picChosen($event)">\n        </div>\n      </ion-col>\n        <ion-col col-3><button  ion-button (click)="send()">Send</button></ion-col> \n  </ion-row>\n\n</ion-footer>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/walk-feed/walk-feed.html"*/,
+            selector: 'page-walk-feed',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/walk-feed/walk-feed.html"*/'<!--\n  Generated template for the WalkFeedPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>WalkFeed</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n    <ion-list no-lines>\n      <ion-item *ngFor="let message of messages" [ngSwitch]="message.type">\n        <p [ngClass]="getStyle(message)" *ngSwitchCase=" \'text\' ">{{ message.txt}}</p>\n		<!--<p [ngClass]="{\'incoming-message\' : message.from == \'walker\' }" *ngSwitchCase=" \'text\' ">{{ message.txt}}</p>-->\n         <img *ngSwitchCase=" \'image\' " [src]="sanitizer.bypassSecurityTrustUrl(message.url)"/> \n      </ion-item>\n    </ion-list>\n\n</ion-content>\n\n<ion-footer padding>\n	<ion-row>\n        <ion-col col-7><input  type="text" [(ngModel)]="newMessage" placeholder="Message..." [ngStyle]="{\'width\':\'90%\' }"/></ion-col>\n        <ion-col col-2>\n        <div>\n          <label for="image_upload">\n                <ion-icon name="camera"></ion-icon>\n          </label>\n            \n          <input name="image_upload" type="file" id="image_upload" style="display: none;" (change)="picChosen($event)">\n        </div>\n      </ion-col>\n        <ion-col col-3><button  ion-button (click)="send()">Send</button></ion-col> \n  </ion-row>\n\n</ion-footer>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/walk-feed/walk-feed.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
             __WEBPACK_IMPORTED_MODULE_2__ionic_native_camera__["a" /* Camera */],
@@ -1782,13 +814,13 @@ var WalkFeedPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 233:
+/***/ 154:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return NotificationsPopOverPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1816,7 +848,7 @@ var NotificationsPopOverPage = /** @class */ (function () {
     };
     NotificationsPopOverPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-notifications-pop-over',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/notifications-pop-over/notifications-pop-over.html"*/'<!--\n  Generated template for the NotificationsPopOverPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n\n<!-- <ion-content style="height:400px;width:200px;">\n\n	<!-<ion-card>-->\n\n		<!-- <ion-row padding>\n\n			<ion-label text-center> Notification text </ion-label>\n\n		</ion-row>\n\n		<ion-row>\n					<div class="main-pic">\n				<ion-col col-6 offset-3>\n					<img src="assets/imgs/snowball.png" width="90px" class="pet-pic"/>\n				</ion-col>\n					</div>\n\n					<div class="green-check">\n				<ion-col col-3 offset-9>\n\n					<img src="assets/imgs/greencheck.svg"/>\n\n				</ion-col>\n					</div>\n			</ion-row>\n\n		<ion-item no-padding>\n		</ion-item>\n\n		<ion-row padding>\n\n			<p> Check your messages and wait for approval </p>\n\n		</ion-row>\n	<!--</ion-card>-->\n\n<!-- </ion-content>\n --> \n <div class="container">\n	\n		<div class="pop-over">\n			<div class="picture-wrapper">\n		\n				<div class="main-pic">\n					<img src="assets/imgs/snowball.png"  class="pet-pic"/>	\n				</div>\n		\n				<div class="green-check">		\n					<img src="assets/imgs/greencheck.svg"/>\n				</div>\n			</div>\n		\n		<div class="pop-over-message">\n			<p> Check your messages and wait for approval </p>\n		</div>\n		\n		\n		</div>\n		\n		</div>\n		'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/notifications-pop-over/notifications-pop-over.html"*/,
+            selector: 'page-notifications-pop-over',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/notifications-pop-over/notifications-pop-over.html"*/'<!--\n  Generated template for the NotificationsPopOverPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n\n<!-- <ion-content style="height:400px;width:200px;">\n\n	<!-<ion-card>-->\n\n		<!-- <ion-row padding>\n\n			<ion-label text-center> Notification text </ion-label>\n\n		</ion-row>\n\n		<ion-row>\n					<div class="main-pic">\n				<ion-col col-6 offset-3>\n					<img src="assets/imgs/snowball.png" width="90px" class="pet-pic"/>\n				</ion-col>\n					</div>\n\n					<div class="green-check">\n				<ion-col col-3 offset-9>\n\n					<img src="assets/imgs/greencheck.svg"/>\n\n				</ion-col>\n					</div>\n			</ion-row>\n\n		<ion-item no-padding>\n		</ion-item>\n\n		<ion-row padding>\n\n			<p> Check your messages and wait for approval </p>\n\n		</ion-row>\n	<!--</ion-card>-->\n\n<!-- </ion-content>\n --> \n <div class="container">\n	\n		<div class="pop-over">\n			<div class="picture-wrapper">\n		\n				<div class="main-pic">\n					<img src="assets/imgs/snowball.png"  class="pet-pic"/>	\n				</div>\n		\n				<div class="green-check">		\n					<img src="assets/imgs/greencheck.svg"/>\n				</div>\n			</div>\n		\n		<div class="pop-over-message">\n			<p> Check your messages and wait for approval </p>\n		</div>\n		\n		\n		</div>\n		\n		</div>\n		'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/notifications-pop-over/notifications-pop-over.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]])
     ], NotificationsPopOverPage);
@@ -1827,20 +859,20 @@ var NotificationsPopOverPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 234:
+/***/ 155:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SignInPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_axios__ = __webpack_require__(121);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_axios__ = __webpack_require__(72);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_axios__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__book_walk_book_walk__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__providers_fire_fire__ = __webpack_require__(68);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__providers_client_client__ = __webpack_require__(184);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__providers_config__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__book_walk_book_walk__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__providers_fire_fire__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__providers_client_client__ = __webpack_require__(116);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__providers_config__ = __webpack_require__(36);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1951,7 +983,7 @@ var SignInPage = /** @class */ (function () {
     };
     SignInPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-sign-in',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/sign-in/sign-in.html"*/'<!--\n  Generated template for the SignInPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>Sign-In</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-row>\n		<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n	</ion-row>\n\n	<ion-row padding>\n\n		<ion-item>\n\n			<ion-label floating>Email <ion-icon name="mail"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="email"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n	<ion-row padding>\n\n		<ion-item>\n\n			<ion-label floating>Password <ion-icon name="key"></ion-icon></ion-label>\n    		<ion-input type="password" [(ngModel)]="password"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n	<ion-row padding>\n\n		<button ion-button color="orange" block round (click)="emailLogin()"> Sign In </button>\n\n	</ion-row>\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/sign-in/sign-in.html"*/,
+            selector: 'page-sign-in',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/sign-in/sign-in.html"*/'<!--\n  Generated template for the SignInPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>Sign-In</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-row>\n		<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n	</ion-row>\n\n	<ion-row padding>\n\n		<ion-item>\n\n			<ion-label floating>Email <ion-icon name="mail"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="email"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n	<ion-row padding>\n\n		<ion-item>\n\n			<ion-label floating>Password <ion-icon name="key"></ion-icon></ion-label>\n    		<ion-input type="password" [(ngModel)]="password"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n	<ion-row padding>\n\n		<button ion-button color="orange" block round (click)="emailLogin()"> Sign In </button>\n\n	</ion-row>\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/sign-in/sign-in.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
             __WEBPACK_IMPORTED_MODULE_2__ionic_storage__["b" /* Storage */],
@@ -1966,83 +998,7 @@ var SignInPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 235:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return NotificationAlertPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-/**
- * Generated class for the NotificationAlertPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
-var NotificationAlertPage = /** @class */ (function () {
-    function NotificationAlertPage(navCtrl, navParams, viewController) {
-        this.navCtrl = navCtrl;
-        this.navParams = navParams;
-        this.viewController = viewController;
-    }
-    NotificationAlertPage.prototype.ionViewDidLoad = function () {
-        console.log('ionViewDidLoad NotificationAlertPage');
-        //document.body.classList.add('notification-popup');
-    };
-    NotificationAlertPage.prototype.ionViewDidEnter = function () {
-        document.body.classList.add('notification-popup');
-        this.reqData = this.navParams.get('reqData');
-        console.log('reqData', this.reqData);
-        if (this.reqData.status == 'walkStart') {
-            this.pets = this.reqData.pets;
-            console.log('this.pets', this.pets);
-            this.walkerData = this.navParams.get('walkerData');
-        }
-        else if (this.reqData.status == 'walkStop') {
-            this.pets = this.reqData.pets;
-        }
-        else if (this.reqData.status == 'walkEnd') {
-            this.pets = this.reqData.pets;
-            console.log('this.pets', this.pets);
-            this.walkerData = this.navParams.get('walkerData');
-        }
-        else {
-            this.walkerData = this.navParams.get('walkerData');
-        }
-    };
-    NotificationAlertPage.prototype.ionViewWillLeave = function () {
-        console.log('ionViewWillLeave');
-        document.body.classList.remove('notification-popup');
-    };
-    NotificationAlertPage.prototype.dismiss = function () {
-        //document.body.classList.remove('notification-popup');
-        this.viewController.dismiss();
-    };
-    NotificationAlertPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-notifications-alert',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/notifications-alert/notifications-alert.html"*/'<!--\n  Generated template for the NotificationAlertPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n\n<ion-content class="notification-popup" *ngIf="reqData">\n    <h2 *ngIf="reqData.msgTitle">{{reqData.msgTitle}}</h2>\n  \n    <img *ngIf="walkerData" src="{{walkerData.pic}}">\n  \n    <div class="bookwalk-pet-pic" *ngIf="pets">\n      <ng-container *ngFor="let item of pets">\n        <img [src]="item?.pic" class="pet-image" [ngStyle]="{\'align-self\': \'center\'}"/>\n      </ng-container>\n    </div>\n  \n    <div class="poup-btn-wrap" (click)="dismiss()">\n      <img class="tick-img" src="assets/imgs/greencheck.svg">\n    </div>\n  \n    <!-- <ion-buttons start>\n      <button ion-button (click)="dismiss()"></button>\n    </ion-buttons> -->\n    <div class="popup-content" *ngIf="reqData.msgText">\n      <p>{{reqData.msgText}}</p>	\n    </div>\n  \n  </ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/notifications-alert/notifications-alert.html"*/,
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* ViewController */]])
-    ], NotificationAlertPage);
-    return NotificationAlertPage;
-}());
-
-//# sourceMappingURL=notifications-alert.js.map
-
-/***/ }),
-
-/***/ 246:
+/***/ 165:
 /***/ (function(module, exports) {
 
 function webpackEmptyAsyncContext(req) {
@@ -2055,105 +1011,105 @@ function webpackEmptyAsyncContext(req) {
 webpackEmptyAsyncContext.keys = function() { return []; };
 webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
 module.exports = webpackEmptyAsyncContext;
-webpackEmptyAsyncContext.id = 246;
+webpackEmptyAsyncContext.id = 165;
 
 /***/ }),
 
-/***/ 291:
+/***/ 209:
 /***/ (function(module, exports, __webpack_require__) {
 
 var map = {
 	"../pages/address/address.module": [
-		873,
+		440,
 		22
 	],
 	"../pages/book-walk/book-walk.module": [
-		874,
+		442,
 		21
 	],
 	"../pages/card/card.module": [
-		875,
+		441,
 		20
 	],
 	"../pages/editprofile/editprofile.module": [
-		876,
+		443,
 		19
 	],
 	"../pages/login/login.module": [
-		877,
+		444,
 		18
 	],
 	"../pages/notifications-alert/notifications-alert.module": [
-		878,
-		17
+		445,
+		3
 	],
 	"../pages/notifications-pop-over/notifications-pop-over.module": [
-		879,
-		16
+		446,
+		17
 	],
 	"../pages/pet/pet.module": [
-		880,
-		15
+		447,
+		16
 	],
 	"../pages/pets/pets.module": [
-		881,
-		14
+		448,
+		15
 	],
 	"../pages/rate-walk/rate-walk.module": [
-		882,
-		13
+		449,
+		14
 	],
 	"../pages/register/register.module": [
-		883,
-		12
+		450,
+		13
 	],
 	"../pages/report/report.module": [
-		884,
-		11
+		451,
+		12
 	],
 	"../pages/select-more-pets/select-more-pets.module": [
-		885,
-		10
+		452,
+		2
 	],
 	"../pages/settings/settings.module": [
-		886,
-		9
+		453,
+		11
 	],
 	"../pages/sign-in/sign-in.module": [
-		887,
-		8
+		454,
+		10
 	],
 	"../pages/sign-up/sign-up.module": [
-		888,
-		7
+		455,
+		9
 	],
 	"../pages/track-walk/track-walk.module": [
-		889,
-		6
+		456,
+		8
 	],
 	"../pages/verify/verify.module": [
-		890,
-		5
+		457,
+		7
 	],
 	"../pages/videocall/videocall.module": [
-		891,
+		458,
 		1
 	],
 	"../pages/walk-feed/walk-feed.module": [
-		892,
-		4
+		459,
+		6
 	],
 	"../pages/walker/walker.module": [
-		893,
-		3
+		460,
+		5
 	],
 	"../pages/walkerquestions/walkerquestions.module": [
-		894,
+		461,
 		0
 	],
 	"../pages/walks/walks.module": [
-		895,
-		2
+		462,
+		4
 	]
 };
 function webpackAsyncContext(req) {
@@ -2167,23 +1123,23 @@ function webpackAsyncContext(req) {
 webpackAsyncContext.keys = function webpackAsyncContextKeys() {
 	return Object.keys(map);
 };
-webpackAsyncContext.id = 291;
+webpackAsyncContext.id = 209;
 module.exports = webpackAsyncContext;
 
 /***/ }),
 
-/***/ 309:
+/***/ 221:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return HomePage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__walker_walker__ = __webpack_require__(231);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__providers_fire_fire__ = __webpack_require__(68);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_geolocation__ = __webpack_require__(114);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_mapbox_gl__ = __webpack_require__(410);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__walker_walker__ = __webpack_require__(152);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__providers_fire_fire__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_geolocation__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_mapbox_gl__ = __webpack_require__(244);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_mapbox_gl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_mapbox_gl__);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -2420,7 +1376,7 @@ var HomePage = /** @class */ (function () {
     ], HomePage.prototype, "mapboxMap", void 0);
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/home/home.html"*/'<ion-header>\n  <ion-navbar color="yellow">\n  	<div id="logo">\n  		<img id="udog-logo" src="assets/imgs/logo.svg"/>\n  	</div>\n  </ion-navbar>\n     <link href=\'https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.css\' rel=\'stylesheet\' />\n</ion-header>\n\n<ion-content no-padding>\n	<div class="subHeader">\n		<p>Please select a dog walker in your area</p>\n	</div>\n		<div #map id=\'map\' class="map"></div>\n	\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/home/home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/home/home.html"*/'<ion-header>\n  <ion-navbar color="yellow">\n  	<div id="logo">\n  		<img id="udog-logo" src="assets/imgs/logo.svg"/>\n  	</div>\n  </ion-navbar>\n     <link href=\'https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.css\' rel=\'stylesheet\' />\n</ion-header>\n\n<ion-content no-padding>\n	<div class="subHeader">\n		<p>Please select a dog walker in your area</p>\n	</div>\n		<div #map id=\'map\' class="map"></div>\n	\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/home/home.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */],
             __WEBPACK_IMPORTED_MODULE_3__providers_fire_fire__["a" /* FireProvider */],
@@ -2439,18 +1395,18 @@ var HomePage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 456:
+/***/ 289:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return LoginPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__sign_up_sign_up__ = __webpack_require__(76);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__sign_in_sign_in__ = __webpack_require__(234);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_google_plus__ = __webpack_require__(411);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__book_walk_book_walk__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_facebook__ = __webpack_require__(412);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__sign_up_sign_up__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__sign_in_sign_in__ = __webpack_require__(155);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_google_plus__ = __webpack_require__(245);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__book_walk_book_walk__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_facebook__ = __webpack_require__(246);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -2519,7 +1475,7 @@ var LoginPage = /** @class */ (function () {
     };
     LoginPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-login',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/login/login.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title>Login</ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding>\n	<ion-row>\n		<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n	</ion-row>\n\n\n	<!--<ion-row padding>\n		<ion-col col-6 text-right>\n				<button ion-button color="facebook" (click)="facebookLogin()" round>Facebook</button>\n		</ion-col>\n		<ion-col col-6 text-left>\n				<button ion-button color="primary" (click)="googleLogin()" round>Google</button>\n		</ion-col>\n\n	</ion-row>-->\n\n	<!--<ion-row padding> \n		<button large ion-button color="orange" (click)="register()" block round> Register With Email </button>\n\n	</ion-row>-->\n\n	<ion-row padding> \n		<button large ion-button color="orange" (click)="register()" block round> Register</button>\n\n	</ion-row>\n\n	<!--\n	<ion-row padding>\n		<button large ion-button color="facebook" block round (click)="facebookLogin()"> Continue with Facebook </button>\n	</ion-row>\n	\n	<ion-row padding>\n		<button large ion-button color="primary" (click)="googleLogin()" block round> Continue with Google </button>\n	</ion-row>\n-->\n\n	<p text-center>\n		<span class="gray">Already Have an Account?</span> \n		<span (click)="login()"> Log In</span>\n	</p>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/login/login.html"*/,
+            selector: 'page-login',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/login/login.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title>Login</ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding>\n	<ion-row>\n		<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n	</ion-row>\n\n\n	<!--<ion-row padding>\n		<ion-col col-6 text-right>\n				<button ion-button color="facebook" (click)="facebookLogin()" round>Facebook</button>\n		</ion-col>\n		<ion-col col-6 text-left>\n				<button ion-button color="primary" (click)="googleLogin()" round>Google</button>\n		</ion-col>\n\n	</ion-row>-->\n\n	<!--<ion-row padding> \n		<button large ion-button color="orange" (click)="register()" block round> Register With Email </button>\n\n	</ion-row>-->\n\n	<ion-row padding> \n		<button large ion-button color="orange" (click)="register()" block round> Register</button>\n\n	</ion-row>\n\n	<!--\n	<ion-row padding>\n		<button large ion-button color="facebook" block round (click)="facebookLogin()"> Continue with Facebook </button>\n	</ion-row>\n	\n	<ion-row padding>\n		<button large ion-button color="primary" (click)="googleLogin()" block round> Continue with Google </button>\n	</ion-row>\n-->\n\n	<p text-center>\n		<span class="gray">Already Have an Account?</span> \n		<span (click)="login()"> Log In</span>\n	</p>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/login/login.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* Platform */], __WEBPACK_IMPORTED_MODULE_4__ionic_native_google_plus__["a" /* GooglePlus */],
             __WEBPACK_IMPORTED_MODULE_6__ionic_native_facebook__["a" /* Facebook */]])
@@ -2531,112 +1487,13 @@ var LoginPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 457:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SelectMorePetsPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-var SelectMorePetsPage = /** @class */ (function () {
-    function SelectMorePetsPage(viewCtrl, navCtrl, navParams) {
-        this.viewCtrl = viewCtrl;
-        this.navCtrl = navCtrl;
-        this.navParams = navParams;
-        this.checkedCount = 0;
-        this.isCheckedPets = [];
-    }
-    SelectMorePetsPage.prototype.ionViewDidLoad = function () {
-        console.log('ionViewDidLoad SelectMorePetsPage');
-    };
-    SelectMorePetsPage.prototype.ionViewDidEnter = function () {
-        var _this = this;
-        this.selectedPets = this.navParams.get('selectedPets');
-        console.log('selectedPets', this.selectedPets);
-        var getAllpertData = JSON.parse(localStorage.getItem('pets'));
-        for (var i = 0; i < getAllpertData.length; i++) {
-            getAllpertData[i]._id = 'pets' + i;
-            getAllpertData[i].checked = false;
-            getAllpertData[i].petName = getAllpertData[i].name;
-        }
-        console.log('getAllpertData==>', getAllpertData);
-        if (this.selectedPets.length > 0) {
-            var metchArray = getAllpertData.filter(function (item) {
-                _this.selectedPets.some(function (data) {
-                    if (item._id === data._id) {
-                        item.checked = true;
-                    }
-                });
-                return item;
-            });
-            console.log('metchArray', metchArray);
-            this.checkedCount = this.selectedPets.length;
-            console.log('checkedCount', this.checkedCount);
-            this.isCheckedPets = this.selectedPets;
-            console.log('isCheckedPets', this.isCheckedPets);
-        }
-        this.allPets = getAllpertData;
-        console.log('allpets', this.allPets);
-        this.numberOfDogs = this.navParams.get('numberOfDogs');
-        console.log('numberOfDogs', this.numberOfDogs);
-    };
-    SelectMorePetsPage.prototype.selectPets = function (item) {
-        console.log('item', item);
-        if (item.checked) {
-            console.log('++' + item.name);
-            this.checkedCount++;
-            item.checked = true;
-            this.isCheckedPets.push(item);
-        }
-        else {
-            this.checkedCount--;
-            console.log('--');
-            item.checked = false;
-            var index = this.isCheckedPets.findIndex(function (x) { return x._id == item._id; });
-            if (index !== -1) {
-                this.isCheckedPets.splice(index, 1);
-            }
-        }
-        ;
-        console.log('this.isCheckedPets', this.isCheckedPets);
-    };
-    SelectMorePetsPage.prototype.dismiss = function () {
-        this.viewCtrl.dismiss();
-    };
-    SelectMorePetsPage.prototype.selectdDogs = function () {
-        this.viewCtrl.dismiss(this.isCheckedPets);
-    };
-    SelectMorePetsPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-select-more-pets',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/select-more-pets/select-more-pets.html"*/'<!--\n  Generated template for the SelectMorePetsPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n  	<ion-buttons start>\n      <button [disabled]="isCheckedPets.length != numberOfDogs" ion-button icon-only (click)="selectdDogs()">\n        <ion-icon name="checkmark"></ion-icon>\n      </button>\n    </ion-buttons>\n    <ion-title>Select more pets</ion-title>\n    <ion-buttons end>\n      <button ion-button icon-only (click)="dismiss()">\n        <ion-icon name="close"></ion-icon>\n      </button>\n    </ion-buttons>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-list>\n		<ion-item *ngFor="let items of allPets">\n      <ion-avatar item-start>\n      		<img [src]="items.pic">\n      </ion-avatar>\n      <ion-label>{{items.petName}}</ion-label>\n      <ion-checkbox item-end [disabled]="checkedCount == numberOfDogs && !items.checked" [(ngModel)]="items.checked" (ionChange)="selectPets(items)"></ion-checkbox>\n\n		</ion-item>\n	</ion-list>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/select-more-pets/select-more-pets.html"*/,
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* ViewController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]])
-    ], SelectMorePetsPage);
-    return SelectMorePetsPage;
-}());
-
-//# sourceMappingURL=select-more-pets.js.map
-
-/***/ }),
-
-/***/ 458:
+/***/ 290:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__ = __webpack_require__(459);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__app_module__ = __webpack_require__(463);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__ = __webpack_require__(291);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__app_module__ = __webpack_require__(306);
 
 
 Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* platformBrowserDynamic */])().bootstrapModule(__WEBPACK_IMPORTED_MODULE_1__app_module__["a" /* AppModule */]);
@@ -2644,69 +1501,68 @@ Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* pl
 
 /***/ }),
 
-/***/ 463:
+/***/ 306:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* unused harmony export firebaseAuth */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_component__ = __webpack_require__(861);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__pages_about_about__ = __webpack_require__(862);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__pages_profile_profile__ = __webpack_require__(115);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__pages_home_home__ = __webpack_require__(309);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__pages_tabs_tabs__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__pages_walker_walker__ = __webpack_require__(231);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__pages_login_login__ = __webpack_require__(456);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__pages_sign_up_sign_up__ = __webpack_require__(76);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__pages_sign_in_sign_in__ = __webpack_require__(234);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__pages_book_walk_book_walk__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__pages_card_card__ = __webpack_require__(74);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__pages_pet_pet__ = __webpack_require__(75);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__pages_walk_feed_walk_feed__ = __webpack_require__(232);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__pages_track_walk_track_walk__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__pages_walks_walks__ = __webpack_require__(102);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__pages_report_report__ = __webpack_require__(137);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__pages_settings_settings__ = __webpack_require__(136);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__pages_address_address__ = __webpack_require__(226);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__pages_notifications_pop_over_notifications_pop_over__ = __webpack_require__(233);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__pages_verify_verify__ = __webpack_require__(229);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__pages_register_register__ = __webpack_require__(230);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__pages_rate_walk_rate_walk__ = __webpack_require__(138);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__pages_editprofile_editprofile__ = __webpack_require__(227);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__pages_pets_pets__ = __webpack_require__(228);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__pages_notifications_alert_notifications_alert__ = __webpack_require__(235);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__ionic_native_status_bar__ = __webpack_require__(452);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_29__ionic_native_splash_screen__ = __webpack_require__(453);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_30__ionic_native_social_sharing__ = __webpack_require__(185);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_31__ionic_native_google_maps__ = __webpack_require__(863);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_32__ionic_native_google_plus__ = __webpack_require__(411);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_33__ionic_native_video_player__ = __webpack_require__(864);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_34__ionic_native_streaming_media__ = __webpack_require__(865);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_35__ionic_native_camera__ = __webpack_require__(171);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_36__ionic_native_geolocation__ = __webpack_require__(114);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_37__ionic_native_facebook__ = __webpack_require__(412);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_38__pages_select_more_pets_select_more_pets__ = __webpack_require__(457);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_39__angular_http__ = __webpack_require__(166);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_40__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_41_angularfire2__ = __webpack_require__(130);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_42_angularfire2_auth__ = __webpack_require__(866);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_43_angularfire2_database__ = __webpack_require__(310);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_44_angularfire2_firestore__ = __webpack_require__(201);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_45_ionic2_rating__ = __webpack_require__(869);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_46__ionic_native_stripe__ = __webpack_require__(871);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_47__providers_api_service_api_service__ = __webpack_require__(872);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_48__providers_config__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_49__providers_fire_fire__ = __webpack_require__(68);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_50__providers_client_client__ = __webpack_require__(184);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_component__ = __webpack_require__(427);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__pages_about_about__ = __webpack_require__(428);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__pages_profile_profile__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__pages_home_home__ = __webpack_require__(221);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__pages_tabs_tabs__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__pages_walker_walker__ = __webpack_require__(152);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__pages_login_login__ = __webpack_require__(289);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__pages_sign_up_sign_up__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__pages_sign_in_sign_in__ = __webpack_require__(155);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__pages_book_walk_book_walk__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__pages_card_card__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__pages_pet_pet__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__pages_walk_feed_walk_feed__ = __webpack_require__(153);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__pages_track_walk_track_walk__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__pages_walks_walks__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__pages_report_report__ = __webpack_require__(79);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__pages_settings_settings__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__pages_address_address__ = __webpack_require__(147);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__pages_notifications_pop_over_notifications_pop_over__ = __webpack_require__(154);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__pages_verify_verify__ = __webpack_require__(150);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__pages_register_register__ = __webpack_require__(151);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__pages_rate_walk_rate_walk__ = __webpack_require__(80);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__pages_editprofile_editprofile__ = __webpack_require__(148);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__pages_pets_pets__ = __webpack_require__(149);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__pages_videocall_videocall__ = __webpack_require__(465);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__ionic_native_status_bar__ = __webpack_require__(286);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_29__ionic_native_splash_screen__ = __webpack_require__(287);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_30__ionic_native_social_sharing__ = __webpack_require__(125);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_31__ionic_native_google_maps__ = __webpack_require__(429);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_32__ionic_native_google_plus__ = __webpack_require__(245);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_33__ionic_native_video_player__ = __webpack_require__(430);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_34__ionic_native_streaming_media__ = __webpack_require__(431);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_35__ionic_native_camera__ = __webpack_require__(114);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_36__ionic_native_geolocation__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_37__ionic_native_facebook__ = __webpack_require__(246);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_38__angular_http__ = __webpack_require__(111);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_39__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_40_angularfire2__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_41_angularfire2_auth__ = __webpack_require__(222);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_42_angularfire2_database__ = __webpack_require__(231);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_43_angularfire2_firestore__ = __webpack_require__(242);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_44_ionic2_rating__ = __webpack_require__(432);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_45__ionic_native_stripe__ = __webpack_require__(434);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_46__providers_api_service_api_service__ = __webpack_require__(435);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_47__providers_config__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_48__providers_fire_fire__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_49__providers_client_client__ = __webpack_require__(116);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-
 
 
 
@@ -2756,12 +1612,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 //import { CardIO } from '@ionic-native/card-io'
 
 
-var API_URL = __WEBPACK_IMPORTED_MODULE_48__providers_config__["a" /* API_URL */];
-var firebaseAuth = __WEBPACK_IMPORTED_MODULE_48__providers_config__["b" /* firebaseConfig */];
+var API_URL = __WEBPACK_IMPORTED_MODULE_47__providers_config__["a" /* API_URL */];
 //import { SocketIoModule, SocketIoConfig } from 'ng-socket-io'
 
 
 var socketConfig = { url: API_URL, options: {} };
+var firebaseAuth = {
+    apiKey: "AIzaSyBgI_KhX2VYMgTTsJAJdlnLWdeD0Ce4DaQ",
+    authDomain: "udog-eabc9.firebaseapp.com",
+    databaseURL: "https://udog-eabc9.firebaseio.com",
+    projectId: "udog-eabc9",
+    storageBucket: "udog-eabc9.appspot.com",
+    messagingSenderId: "556174911218"
+};
 var AppModule = /** @class */ (function () {
     function AppModule() {
     }
@@ -2782,6 +1645,7 @@ var AppModule = /** @class */ (function () {
                 __WEBPACK_IMPORTED_MODULE_14__pages_pet_pet__["a" /* PetPage */],
                 __WEBPACK_IMPORTED_MODULE_15__pages_walk_feed_walk_feed__["a" /* WalkFeedPage */],
                 __WEBPACK_IMPORTED_MODULE_16__pages_track_walk_track_walk__["a" /* TrackWalkPage */],
+                __WEBPACK_IMPORTED_MODULE_27__pages_videocall_videocall__["a" /* VideocallPage */],
                 __WEBPACK_IMPORTED_MODULE_17__pages_walks_walks__["a" /* WalksPage */],
                 __WEBPACK_IMPORTED_MODULE_18__pages_report_report__["a" /* ReportPage */],
                 __WEBPACK_IMPORTED_MODULE_19__pages_settings_settings__["a" /* SettingsPage */],
@@ -2792,19 +1656,17 @@ var AppModule = /** @class */ (function () {
                 __WEBPACK_IMPORTED_MODULE_24__pages_rate_walk_rate_walk__["a" /* RateWalkPage */],
                 __WEBPACK_IMPORTED_MODULE_25__pages_editprofile_editprofile__["a" /* EditprofilePage */],
                 __WEBPACK_IMPORTED_MODULE_26__pages_pets_pets__["a" /* PetsPage */],
-                __WEBPACK_IMPORTED_MODULE_27__pages_notifications_alert_notifications_alert__["a" /* NotificationAlertPage */],
-                __WEBPACK_IMPORTED_MODULE_38__pages_select_more_pets_select_more_pets__["a" /* SelectMorePetsPage */]
             ],
             imports: [
                 __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__["a" /* BrowserModule */],
-                __WEBPACK_IMPORTED_MODULE_39__angular_http__["c" /* HttpModule */],
+                __WEBPACK_IMPORTED_MODULE_38__angular_http__["c" /* HttpModule */],
                 __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["e" /* IonicModule */].forRoot(__WEBPACK_IMPORTED_MODULE_3__app_component__["a" /* MyApp */], {
                     mode: 'md'
                 }, {
                     links: [
                         { loadChildren: '../pages/address/address.module#AddressPageModule', name: 'AddressPage', segment: 'address', priority: 'low', defaultHistory: [] },
-                        { loadChildren: '../pages/book-walk/book-walk.module#BookWalkPageModule', name: 'BookWalkPage', segment: 'book-walk', priority: 'low', defaultHistory: [] },
                         { loadChildren: '../pages/card/card.module#CardPageModule', name: 'CardPage', segment: 'card', priority: 'low', defaultHistory: [] },
+                        { loadChildren: '../pages/book-walk/book-walk.module#BookWalkPageModule', name: 'BookWalkPage', segment: 'book-walk', priority: 'low', defaultHistory: [] },
                         { loadChildren: '../pages/editprofile/editprofile.module#EditprofilePageModule', name: 'EditprofilePage', segment: 'editprofile', priority: 'low', defaultHistory: [] },
                         { loadChildren: '../pages/login/login.module#LoginPageModule', name: 'LoginPage', segment: 'login', priority: 'low', defaultHistory: [] },
                         { loadChildren: '../pages/notifications-alert/notifications-alert.module#NotificationsAlertPageModule', name: 'NotificationAlertPage', segment: 'notifications-alert', priority: 'low', defaultHistory: [] },
@@ -2827,13 +1689,13 @@ var AppModule = /** @class */ (function () {
                         { loadChildren: '../pages/walks/walks.module#WalksPageModule', name: 'WalksPage', segment: 'walks', priority: 'low', defaultHistory: [] }
                     ]
                 }),
-                __WEBPACK_IMPORTED_MODULE_41_angularfire2__["a" /* AngularFireModule */].initializeApp(firebaseAuth),
-                __WEBPACK_IMPORTED_MODULE_42_angularfire2_auth__["a" /* AngularFireAuthModule */],
-                __WEBPACK_IMPORTED_MODULE_43_angularfire2_database__["b" /* AngularFireDatabaseModule */],
-                __WEBPACK_IMPORTED_MODULE_42_angularfire2_auth__["a" /* AngularFireAuthModule */],
-                __WEBPACK_IMPORTED_MODULE_44_angularfire2_firestore__["b" /* AngularFirestoreModule */],
-                __WEBPACK_IMPORTED_MODULE_40__ionic_storage__["a" /* IonicStorageModule */].forRoot(),
-                __WEBPACK_IMPORTED_MODULE_45_ionic2_rating__["a" /* Ionic2RatingModule */],
+                __WEBPACK_IMPORTED_MODULE_40_angularfire2__["a" /* AngularFireModule */].initializeApp(firebaseAuth),
+                __WEBPACK_IMPORTED_MODULE_41_angularfire2_auth__["b" /* AngularFireAuthModule */],
+                __WEBPACK_IMPORTED_MODULE_42_angularfire2_database__["b" /* AngularFireDatabaseModule */],
+                __WEBPACK_IMPORTED_MODULE_41_angularfire2_auth__["b" /* AngularFireAuthModule */],
+                __WEBPACK_IMPORTED_MODULE_43_angularfire2_firestore__["b" /* AngularFirestoreModule */],
+                __WEBPACK_IMPORTED_MODULE_39__ionic_storage__["a" /* IonicStorageModule */].forRoot(),
+                __WEBPACK_IMPORTED_MODULE_44_ionic2_rating__["a" /* Ionic2RatingModule */],
             ],
             bootstrap: [__WEBPACK_IMPORTED_MODULE_2_ionic_angular__["c" /* IonicApp */]],
             entryComponents: [
@@ -2852,6 +1714,7 @@ var AppModule = /** @class */ (function () {
                 __WEBPACK_IMPORTED_MODULE_15__pages_walk_feed_walk_feed__["a" /* WalkFeedPage */],
                 __WEBPACK_IMPORTED_MODULE_16__pages_track_walk_track_walk__["a" /* TrackWalkPage */],
                 __WEBPACK_IMPORTED_MODULE_17__pages_walks_walks__["a" /* WalksPage */],
+                __WEBPACK_IMPORTED_MODULE_27__pages_videocall_videocall__["a" /* VideocallPage */],
                 __WEBPACK_IMPORTED_MODULE_18__pages_report_report__["a" /* ReportPage */],
                 __WEBPACK_IMPORTED_MODULE_19__pages_settings_settings__["a" /* SettingsPage */],
                 __WEBPACK_IMPORTED_MODULE_20__pages_address_address__["a" /* AddressPage */],
@@ -2861,8 +1724,6 @@ var AppModule = /** @class */ (function () {
                 __WEBPACK_IMPORTED_MODULE_24__pages_rate_walk_rate_walk__["a" /* RateWalkPage */],
                 __WEBPACK_IMPORTED_MODULE_25__pages_editprofile_editprofile__["a" /* EditprofilePage */],
                 __WEBPACK_IMPORTED_MODULE_26__pages_pets_pets__["a" /* PetsPage */],
-                __WEBPACK_IMPORTED_MODULE_27__pages_notifications_alert_notifications_alert__["a" /* NotificationAlertPage */],
-                __WEBPACK_IMPORTED_MODULE_38__pages_select_more_pets_select_more_pets__["a" /* SelectMorePetsPage */]
             ],
             providers: [
                 __WEBPACK_IMPORTED_MODULE_31__ionic_native_google_maps__["a" /* GoogleMaps */],
@@ -2870,15 +1731,15 @@ var AppModule = /** @class */ (function () {
                 __WEBPACK_IMPORTED_MODULE_33__ionic_native_video_player__["a" /* VideoPlayer */],
                 __WEBPACK_IMPORTED_MODULE_34__ionic_native_streaming_media__["a" /* StreamingMedia */],
                 __WEBPACK_IMPORTED_MODULE_35__ionic_native_camera__["a" /* Camera */],
-                __WEBPACK_IMPORTED_MODULE_46__ionic_native_stripe__["a" /* Stripe */],
+                __WEBPACK_IMPORTED_MODULE_45__ionic_native_stripe__["a" /* Stripe */],
                 __WEBPACK_IMPORTED_MODULE_36__ionic_native_geolocation__["a" /* Geolocation */],
                 __WEBPACK_IMPORTED_MODULE_28__ionic_native_status_bar__["a" /* StatusBar */],
                 __WEBPACK_IMPORTED_MODULE_29__ionic_native_splash_screen__["a" /* SplashScreen */],
                 { provide: __WEBPACK_IMPORTED_MODULE_0__angular_core__["v" /* ErrorHandler */], useClass: __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["d" /* IonicErrorHandler */] },
-                __WEBPACK_IMPORTED_MODULE_47__providers_api_service_api_service__["a" /* ApiServiceProvider */],
-                __WEBPACK_IMPORTED_MODULE_49__providers_fire_fire__["a" /* FireProvider */],
+                __WEBPACK_IMPORTED_MODULE_46__providers_api_service_api_service__["a" /* ApiServiceProvider */],
+                __WEBPACK_IMPORTED_MODULE_48__providers_fire_fire__["a" /* FireProvider */],
                 __WEBPACK_IMPORTED_MODULE_37__ionic_native_facebook__["a" /* Facebook */],
-                __WEBPACK_IMPORTED_MODULE_50__providers_client_client__["a" /* ClientProvider */],
+                __WEBPACK_IMPORTED_MODULE_49__providers_client_client__["a" /* ClientProvider */],
                 __WEBPACK_IMPORTED_MODULE_30__ionic_native_social_sharing__["a" /* SocialSharing */]
             ]
         })
@@ -2890,7 +1751,7 @@ var AppModule = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 58:
+/***/ 36:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2912,15 +1773,243 @@ var firebaseConfig = {
 
 /***/ }),
 
-/***/ 68:
+/***/ 427:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MyApp; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__ = __webpack_require__(286);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__ = __webpack_require__(287);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_firebase__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_firebase__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__providers_config__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__pages_videocall_videocall__ = __webpack_require__(465);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__ionic_native_geolocation__ = __webpack_require__(70);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+
+
+
+var MyApp = /** @class */ (function () {
+    function MyApp(platform, statusBar, splashScreen, geolocation) {
+        var _this = this;
+        this.geolocation = geolocation;
+        platform.ready().then(function () {
+            // Okay, so the platform is ready and our plugins are available.
+            // Here you can do any higher level native things you might need.
+            _this.rootPage = __WEBPACK_IMPORTED_MODULE_6__pages_videocall_videocall__["a" /* VideocallPage */];
+            statusBar.styleDefault();
+            splashScreen.hide();
+            var geoOptions = {
+                timeout: 10000,
+            };
+            /*this.geolocation.getCurrentPosition(geoOptions)
+              .then((pos) => {
+                console.log(pos.coords)
+              })
+              .catch((err) => {
+                console.log(err)
+                alert('we could not get your current location')
+              })*/
+        });
+        __WEBPACK_IMPORTED_MODULE_4_firebase___default.a.initializeApp(__WEBPACK_IMPORTED_MODULE_5__providers_config__["b" /* firebaseConfig */]);
+        //   firebase.firestore().settings( { timestampsInSnapshots: true })
+    }
+    MyApp.prototype.getLocation = function () {
+        this.geolocation.getCurrentPosition()
+            .then(function (position) {
+            console.log(position);
+            /*let mapOptions = {
+ 
+               center : {
+                 lat : position.coords.latitude,
+                 lng : position.coords.longitude,
+             },
+             zoom : 17,
+             mapTypeId : google.maps.MapTypeId.ROADMAP,
+           }
+ 
+           this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions)
+           //this.addMarker()
+           //
+           //this.initialMarker()*/
+        })
+            .catch(function (err) {
+            alert('We could not get your current location');
+            console.log(err);
+        });
+    };
+    MyApp = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/app/app.html"*/'<ion-nav [root]="rootPage"></ion-nav>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/app/app.html"*/
+        }),
+        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* Platform */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* Platform */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__["a" /* StatusBar */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__["a" /* StatusBar */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__["a" /* SplashScreen */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__["a" /* SplashScreen */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_7__ionic_native_geolocation__["a" /* Geolocation */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_7__ionic_native_geolocation__["a" /* Geolocation */]) === "function" && _d || Object])
+    ], MyApp);
+    return MyApp;
+    var _a, _b, _c, _d;
+}());
+
+//# sourceMappingURL=app.component.js.map
+
+/***/ }),
+
+/***/ 428:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AboutPage; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+var AboutPage = /** @class */ (function () {
+    function AboutPage(navCtrl) {
+        this.navCtrl = navCtrl;
+    }
+    AboutPage = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'page-about',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/about/about.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title text-center>\n      Notifications\n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding>\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/about/about.html"*/
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */]])
+    ], AboutPage);
+    return AboutPage;
+}());
+
+//# sourceMappingURL=about.js.map
+
+/***/ }),
+
+/***/ 435:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ApiServiceProvider; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(111);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_map__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_map__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_add_operator_catch__ = __webpack_require__(436);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_add_operator_catch___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_rxjs_add_operator_catch__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_throw__ = __webpack_require__(439);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_throw___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_throw__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__providers_config__ = __webpack_require__(36);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+
+
+
+var API_URL = __WEBPACK_IMPORTED_MODULE_7__providers_config__["a" /* API_URL */];
+var ApiServiceProvider = /** @class */ (function () {
+    function ApiServiceProvider(http, plt) {
+        this.http = http;
+        this.plt = plt;
+        this.headers = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["a" /* Headers */]();
+    }
+    ApiServiceProvider.prototype.getWalkers = function () {
+        return this.get(this.getPath('active'));
+    };
+    ApiServiceProvider.prototype.setAuthorizationHeader = function () {
+        var token = localStorage.getItem('token');
+        if (this.headers.has('Authorization')) {
+            this.headers.set('Authorization', 'Bearer ' + token);
+        }
+        else {
+            this.headers.append('Authorization', 'Bearer ' + token);
+        }
+        return this.headers;
+    };
+    ApiServiceProvider.prototype.get = function (uri, collection) {
+        // this.headers = this.setAuthorizationHeader();
+        var _this = this;
+        if (collection === void 0) { collection = true; }
+        return this.http
+            .get(uri, { headers: this.headers })
+            .map(function (response) {
+            return _this.getResponse(response, collection);
+        })
+            .catch(this.handleError);
+    };
+    ApiServiceProvider.prototype.post = function (uri, data, collection) {
+        // this.headers = this.setAuthorizationHeader();
+        var _this = this;
+        if (collection === void 0) { collection = false; }
+        return this.http.post(uri, data, { headers: this.headers })
+            .map(function (response) {
+            // return response.json()['data'];
+            return _this.getResponse(response, collection);
+        })
+            .catch(this.handleError);
+    };
+    ApiServiceProvider.prototype.getResponse = function (response, collection) {
+        var resp = response.json();
+        if (!collection) {
+            return resp;
+        }
+        return resp.map(function (resp) { return resp; });
+    };
+    ApiServiceProvider.prototype.handleError = function (error) {
+        return __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].throw(error);
+    };
+    ApiServiceProvider.prototype.getPath = function (uri) {
+        return __WEBPACK_IMPORTED_MODULE_7__providers_config__["a" /* API_URL */] + uri;
+    };
+    ApiServiceProvider = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["B" /* Injectable */])(),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__angular_http__["b" /* Http */], __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["j" /* Platform */]])
+    ], ApiServiceProvider);
+    return ApiServiceProvider;
+}());
+
+//# sourceMappingURL=api-service.js.map
+
+/***/ }),
+
+/***/ 45:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return FireProvider; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_http__ = __webpack_require__(166);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_http__ = __webpack_require__(111);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_firebase__);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3103,17 +2192,18 @@ var FireProvider = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 69:
+/***/ 46:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return TabsPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__profile_profile__ = __webpack_require__(115);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__home_home__ = __webpack_require__(309);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__track_walk_track_walk__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__walks_walks__ = __webpack_require__(102);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__rate_walk_rate_walk__ = __webpack_require__(138);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__profile_profile__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__home_home__ = __webpack_require__(221);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__track_walk_track_walk__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__walks_walks__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__rate_walk_rate_walk__ = __webpack_require__(80);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -3129,18 +2219,26 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 var TabsPage = /** @class */ (function () {
-    function TabsPage() {
+    function TabsPage(navCtrl, navParams) {
+        this.navCtrl = navCtrl;
+        this.navParams = navParams;
         this.tab1Root = __WEBPACK_IMPORTED_MODULE_2__home_home__["a" /* HomePage */];
         this.tab2Root = __WEBPACK_IMPORTED_MODULE_4__walks_walks__["a" /* WalksPage */];
         this.tab3Root = __WEBPACK_IMPORTED_MODULE_1__profile_profile__["a" /* ProfilePage */];
-        this.tab4Root = __WEBPACK_IMPORTED_MODULE_5__rate_walk_rate_walk__["a" /* RateWalkPage */];
+        this.tab4Root = __WEBPACK_IMPORTED_MODULE_6__rate_walk_rate_walk__["a" /* RateWalkPage */];
         this.tab5Root = __WEBPACK_IMPORTED_MODULE_3__track_walk_track_walk__["a" /* TrackWalkPage */];
+        //console(this.navCtrl.getActive().component.tabRef.getSelected().root.name);
+        this.variable = false;
     }
+    TabsPage.prototype.ionViewDidEnter = function () {
+        //    this.tabRef.select(2);
+    };
     TabsPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/tabs/tabs.html"*/'<ion-tabs color="black" selectedIndex="1">\n	<ion-tab [root]="tab2Root" tabTitle="" tabIcon="ios-notifications-outline"></ion-tab>\n	<ion-tab [root]="tab1Root" tabTitle="" tabIcon="ios-home-outline"></ion-tab> \n	<ion-tab [root]="tab3Root" tabTitle="" tabIcon="ios-person-outline"></ion-tab>\n  \n  \n  <ion-tab [root]="tab5Root" tabTitle="" tabIcon="ios-mail-outline"></ion-tab>\n\n</ion-tabs>'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/tabs/tabs.html"*/
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/tabs/tabs.html"*/'<ion-tabs color="black" selectedIndex="1" #myTabs>\n	<ion-tab [root]="tab2Root" tabTitle="" tabIcon="ios-notifications-outline"></ion-tab>\n	<ion-tab [root]="tab1Root" tabTitle="" tabIcon="ios-home-outline"></ion-tab> \n	<ion-tab [root]="tab3Root" tabTitle="" tabIcon="ios-person-outline"></ion-tab>\n  <ion-tab [root]="tab5Root"  *ngIf = "variable" tabTitle="" tabIcon="ios-mail-outline"></ion-tab>\n\n</ion-tabs>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/tabs/tabs.html"*/
         }),
-        __metadata("design:paramtypes", [])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["i" /* NavParams */]])
     ], TabsPage);
     return TabsPage;
 }());
@@ -3149,22 +2247,225 @@ var TabsPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 73:
+/***/ 465:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return VideocallPage; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+/**
+ * Generated class for the VideocallPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+var VideocallPage = /** @class */ (function () {
+    function VideocallPage(navCtrl, navParams) {
+        this.navCtrl = navCtrl;
+        this.navParams = navParams;
+    }
+    VideocallPage.prototype.ionViewDidLoad = function () {
+        console.log('ionViewDidLoad VideocallPage');
+    };
+    VideocallPage = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'page-videocall',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/videocall/videocall.html"*/'<!--\n  Generated template for the VideocallPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>videocall</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n<!-- <ion-view class="app-tab" hide-nav-bar="true" view-title="Support"> -->\n\n\n<ion-content padding>\n\n        <h3 class="tab-header-text">Video Call</h3>\n        <div id="call-connected">Connected</div>\n\n        <div id="controls">\n            <div id="preview" style="float:left;">\n                <div id="local-media"></div>\n                <button id="button-preview" style="margin-left:40px;">Preview My Camera</button>\n            </div>\n            <div id="call-controls" class="call-button-div">\n                <i id="button-call" class="icon ion-ios-telephone-outline call-buttons" style="color:green;"></i>\n                <i id="button-call-end" class="icon ion-ios-telephone-outline call-buttons" style="color:red; display:none;"></i>\n            </div>\n        </div>\n        <div id="spin-wrapper"><ion-spinner name="circles"></ion-spinner></div>\n\n        <div id="remote-media">\n            <div id="video-overlay">Walker</div>\n        </div>\n\n</ion-content>\n\n<!-- </ion-view> -->'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/videocall/videocall.html"*/,
+        }),
+        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]) === "function" && _b || Object])
+    ], VideocallPage);
+    return VideocallPage;
+    var _a, _b;
+}());
+
+//# sourceMappingURL=videocall.js.map
+
+/***/ }),
+
+/***/ 47:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CardPage; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__book_walk_book_walk__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(12);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+
+
+
+
+var CardPage = /** @class */ (function () {
+    function CardPage(navCtrl, navParams, viewCtrl, storage) {
+        var _this = this;
+        this.navCtrl = navCtrl;
+        this.navParams = navParams;
+        this.viewCtrl = viewCtrl;
+        this.storage = storage;
+        this.stripeHandler = function (token) {
+            console.log(token);
+            var form = document.getElementById('payment-form');
+            //this.viewCtrl.dismiss()
+            //this.storage.set('token', token.id)
+            //form.submit()
+            localStorage.setItem('token', JSON.stringify(token.id));
+            _this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_2__book_walk_book_walk__["a" /* BookWalkPage */]);
+        };
+    }
+    CardPage.prototype.ionViewDidLoad = function () {
+        console.log('ionViewDidLoad CardPage');
+        this.stripeForm();
+    };
+    CardPage.prototype.stripeForm = function () {
+        var _this = this;
+        var stripe = Stripe('pk_test_4HfhcQqgPDUrWi93vINXEEhh');
+        // Create an instance of Elements
+        var elements = stripe.elements();
+        // Custom styling can be passed to options when creating an Element.
+        // (Note that this demo uses a wider set of styles than the guide below.)
+        var style = {
+            base: {
+                color: '#32325d',
+                lineHeight: '18px',
+                fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                fontSmoothing: 'antialiased',
+                fontSize: '16px',
+                '::placeholder': {
+                    color: '#aab7c4'
+                }
+            },
+            invalid: {
+                color: '#fa755a',
+                iconColor: '#fa755a'
+            }
+        };
+        // Create an instance of the card Element
+        var card = elements.create('card', { style: style });
+        // Add an instance of the card Element into the `card-element` <div>
+        card.mount('#card-element');
+        // Handle real-time validation errors from the card Element.
+        card.addEventListener('change', function (event) {
+            var displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            }
+            else {
+                displayError.textContent = '';
+            }
+        });
+        var form = document.getElementById('payment-form');
+        form.addEventListener('submit', function (event) { return __awaiter(_this, void 0, void 0, function () {
+            var _a, token, error, errorElement;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        event.preventDefault();
+                        return [4 /*yield*/, stripe.createToken(card)];
+                    case 1:
+                        _a = _b.sent(), token = _a.token, error = _a.error;
+                        if (error) {
+                            errorElement = document.getElementById('card-errors');
+                            errorElement.textContent = error.message;
+                        }
+                        else {
+                            // Send the token to your server
+                            this.stripeHandler(token);
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        }); });
+    };
+    CardPage.prototype.close = function () {
+        this.viewCtrl.dismiss();
+    };
+    CardPage = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'page-card',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/card/card.html"*/'<!--\n  Generated template for the CardPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>card</ion-title>\n\n     <!--<ion-buttons end>\n\n    	<button ion-button (click)="close()"> SAVE</button>\n\n    </ion-buttons>-->\n\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<form action= "" method="post" id="payment-form">\n		 <div class="form-row">\n		    <label for="card-element">\n		      Credit or debit card\n		    </label>\n		    <div id="card-element">\n		      <!-- a Stripe Element will be inserted here. -->\n		    </div>\n\n		    <!-- Used to display form errors -->\n		    <div id="card-errors" role="alert"></div>\n		</div>\n		<button ion-button color="primary" block round>Submit Payment</button>\n	</form>\n\n  \n\n  <p> Note you\'ll only be charged after the service is completed </p>\n\n	<script src="https://unpkg.com/card@2.3.0/dist/card.js"></script>\n  \n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/card/card.html"*/,
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["m" /* ViewController */],
+            __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */]])
+    ], CardPage);
+    return CardPage;
+}());
+
+//# sourceMappingURL=card.js.map
+
+/***/ }),
+
+/***/ 48:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return BookWalkPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__providers_fire_fire__ = __webpack_require__(68);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__card_card__ = __webpack_require__(74);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__track_walk_track_walk__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__address_address__ = __webpack_require__(226);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_firebase__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__providers_fire_fire__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__card_card__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__track_walk_track_walk__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__address_address__ = __webpack_require__(147);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_firebase__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__firebase_firestore__ = __webpack_require__(42);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__providers_config__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8__firebase_firestore__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__providers_config__ = __webpack_require__(36);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -3568,7 +2869,7 @@ var BookWalkPage = /** @class */ (function () {
     };
     BookWalkPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-book-walk',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/book-walk/book-walk.html"*/'<!--\n  Generated template for the BookWalkPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>BookWalk</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n\n<ion-content padding>\n	<ion-item-divider color="yellow">\n		<p text-center> SET LOCATION</p>\n	</ion-item-divider>\n\n		\n	\n	<div class="picture-container">\n			<ion-row padding>\n	<div class="bookwalk-profile-pic">\n		<!--<img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" class="profile1-image" />-->\n		<img [src]="walker?.pic" class="profile1-image" />\n	</div>\n\n    <div class="bookwalk-pet-pic">\n		<!--<img src="assets/imgs/snowball.png" class="pet-image" [ngStyle]="{\'align-self\': \'center\'}"/>-->\n		<ion-row>\n			<ion-col *ngFor="let item of pet">\n				<img [src]="item?.pic" class="pet-image" [ngStyle]="{\'align-self\': \'center\'}"/>\n				<p>{{item.name}}</p>\n				<ion-checkbox [(ngModel)]="item.isSelect" (ionChange)="selectPets(item)"></ion-checkbox>\n			</ion-col>\n		</ion-row> \n		<!-- <button *ngIf="isButtonHide" ion-button icon-only (click)="addMorePets()"><ion-icon name="add"></ion-icon></button> -->\n	</div>\n\n</ion-row>\n\n</div> \n\n	<!--\n\n	<ion-row [ngSwitch]="time">\n\n		<div *ngSwitchCase="\'thirty\'">\n			<p text-center>\n				<ion-label> {{ walker?.name }} will walk </ion-label>\n				<ion-label> {{ pet?.name }} </ion-label>\n				<br/>\n				<ion-label> for 30 mins at $15 Right Now! </ion-label>\n			</p>\n		</div>\n		<div *ngSwitchCase="\'sixty\'" text-center>\n			<p text-center>\n				<ion-label> {{ walker?.name }} will walk </ion-label>\n				<ion-label> {{ pet?.name }} </ion-label>\n				<br/>\n				<ion-label> for 60 mins at $25 Right now </ion-label>\n			</p>\n		</div>\n\n	</ion-row>\n\n	<ion-row> \n\n		<ion-item>\n			<ion-label> Time </ion-label>\n			<ion-datetime displayFormat="HH:mm" [(ngModel)]="pickUpTime">\n			</ion-datetime>\n		</ion-item>\n\n	</ion-row>\n\n	<div padding>\n		 <ion-segment [(ngModel)]="time">\n    		<ion-segment-button value="thirty">30 mins</ion-segment-button>\n    		<ion-segment-button value="sixty">60 mins</ion-segment-button>\n  		</ion-segment>\n	</div>\n-->\n\n	<ion-item-divider color="yellow">\n		<p text-center> ADD TIME</p>\n	</ion-item-divider>\n\n	<ion-row radio-group [(ngModel)]="time" >\n\n		\n			<ion-item *ngFor="let item of numberofDogs">\n					<ion-label color="dark"><ng-container *ngIf="item.id == \'3\'">2 Dogs </ng-container>{{item.time}} Minutes ${{item.cost}} {{item.isEnable}}</ion-label>\n					<ion-radio [value]="item.isEnable" name="redioButtons" [checked]="item.isEnable" [disabled]="item.isDisabled" (ionSelect)="durationSelect(item)"></ion-radio>\n				</ion-item>\n\n	</ion-row>\n\n	<ion-row>\n\n		<ion-row padding>\n			<ion-label style="font-weight: bold;"> Pick-Up Location </ion-label>\n		</ion-row>\n		<ion-item>\n			<ion-input type="text" [(ngModel)]="pickUp"></ion-input><ion-icon name="navigate" item-right></ion-icon>\n		</ion-item>\n		<ion-row>\n			<ion-col col-3 offset-4>\n			<button ion-button color="primary" clear style="align-self: center;" (click)="changeAddress()"> Add Unit Number<p style="color: red">*</p></button>\n		</ion-col>\n		</ion-row>\n\n	</ion-row>\n\n\n		<ion-row padding>\n\n			<ion-label style="font-weight: bold;"> Drop-Off Location</ion-label>\n\n		</ion-row>\n\n		<ion-row radio-group [(ngModel)]="same">\n	 		<ion-col col-6>\n	 			<ion-item no-lines>\n	 				<ion-radio value="same" (ionSelect)="locationSelect(\'same\')"></ion-radio><ion-label> Same</ion-label>\n	 			</ion-item>\n	 		</ion-col>\n	 		<ion-col col-6>\n	 			<ion-item no-lines>\n	 				<ion-radio value="other" (ionSelect)="locationSelect(\'other\')"></ion-radio><ion-label> Other </ion-label>\n	 			</ion-item>\n	 		</ion-col>\n		</ion-row>\n\n		<ion-row>\n\n			<ion-item *ngIf="same == \'other\'">\n				<!--<ion-label floating> Drop-Off Location </ion-label>-->\n				<ion-input type="text" [(ngModel)]="dropOff" value="" ></ion-input><ion-icon name="navigate" item-right>\n				</ion-icon>\n			</ion-item>\n		</ion-row>\n\n		<ion-row>\n				<ion-col col-3 offset-3>\n				<button ion-button color="primary" clear style="align-self: center;" (click)="changeAddress()"> Add Unit Number<p style="color: red">*</p></button>\n			</ion-col>\n		</ion-row>\n\n\n\n	<ion-row>\n		<ion-row padding>\n			<ion-label style="font-weight: bold;"> Instructions of Walk </ion-label>\n		</ion-row>\n\n		<ion-item>\n			<ion-input [(ngModel)]="info" type="text" placeholder="(passcode, keycode, leash, doorman)"> </ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n\n	<ion-row>\n		<ion-row padding>\n			<ion-label style="font-weight: bold;"> Reciever\'s Name </ion-label>\n		</ion-row>\n		<ion-item>\n			<ion-input [(ngModel)]="receiverName" type="text" placeholder="(please add name if address drop-off change)"></ion-input>\n		</ion-item>\n	</ion-row>\n\n\n	<!--\n	<ion-row>\n\n		<ion-item>\n\n			<ion-label floating> Receiver\'s phone number </ion-label>\n			<ion-input [(ngModel)]="receiverPhone" type="text"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n-->\n\n	<ion-row>	\n			<button ion-button color="orange" block (click)="saveToFirestore()"> Continue </button>\n	</ion-row>\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/book-walk/book-walk.html"*/,
+            selector: 'page-book-walk',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/book-walk/book-walk.html"*/'<!--\n  Generated template for the BookWalkPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>BookWalk</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n\n<ion-content padding>\n	<ion-item-divider color="yellow">\n		<p text-center> SET LOCATION</p>\n	</ion-item-divider>\n\n		\n	\n	<div class="picture-container">\n			<ion-row padding>\n	<div class="bookwalk-profile-pic">\n		<!--<img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" class="profile1-image" />-->\n		<img [src]="walker?.pic" class="profile1-image" />\n	</div>\n\n    <div class="bookwalk-pet-pic">\n		<!--<img src="assets/imgs/snowball.png" class="pet-image" [ngStyle]="{\'align-self\': \'center\'}"/>-->\n		<ion-row>\n			<ion-col *ngFor="let item of pet">\n				<img [src]="item?.pic" class="pet-image" [ngStyle]="{\'align-self\': \'center\'}"/>\n				<p>{{item.name}}</p>\n				<ion-checkbox [(ngModel)]="item.isSelect" (ionChange)="selectPets(item)"></ion-checkbox>\n			</ion-col>\n		</ion-row> \n		<!-- <button *ngIf="isButtonHide" ion-button icon-only (click)="addMorePets()"><ion-icon name="add"></ion-icon></button> -->\n	</div>\n\n</ion-row>\n\n</div> \n\n	<!--\n\n	<ion-row [ngSwitch]="time">\n\n		<div *ngSwitchCase="\'thirty\'">\n			<p text-center>\n				<ion-label> {{ walker?.name }} will walk </ion-label>\n				<ion-label> {{ pet?.name }} </ion-label>\n				<br/>\n				<ion-label> for 30 mins at $15 Right Now! </ion-label>\n			</p>\n		</div>\n		<div *ngSwitchCase="\'sixty\'" text-center>\n			<p text-center>\n				<ion-label> {{ walker?.name }} will walk </ion-label>\n				<ion-label> {{ pet?.name }} </ion-label>\n				<br/>\n				<ion-label> for 60 mins at $25 Right now </ion-label>\n			</p>\n		</div>\n\n	</ion-row>\n\n	<ion-row> \n\n		<ion-item>\n			<ion-label> Time </ion-label>\n			<ion-datetime displayFormat="HH:mm" [(ngModel)]="pickUpTime">\n			</ion-datetime>\n		</ion-item>\n\n	</ion-row>\n\n	<div padding>\n		 <ion-segment [(ngModel)]="time">\n    		<ion-segment-button value="thirty">30 mins</ion-segment-button>\n    		<ion-segment-button value="sixty">60 mins</ion-segment-button>\n  		</ion-segment>\n	</div>\n-->\n\n	<ion-item-divider color="yellow">\n		<p text-center> ADD TIME</p>\n	</ion-item-divider>\n\n	<ion-row radio-group [(ngModel)]="time" >\n\n		\n			<ion-item *ngFor="let item of numberofDogs">\n					<ion-label color="dark"><ng-container *ngIf="item.id == \'3\'">2 Dogs </ng-container>{{item.time}} Minutes ${{item.cost}} {{item.isEnable}}</ion-label>\n					<ion-radio [value]="item.isEnable" name="redioButtons" [checked]="item.isEnable" [disabled]="item.isDisabled" (ionSelect)="durationSelect(item)"></ion-radio>\n				</ion-item>\n\n	</ion-row>\n\n	<ion-row>\n\n		<ion-row padding>\n			<ion-label style="font-weight: bold;"> Pick-Up Location </ion-label>\n		</ion-row>\n		<ion-item>\n			<ion-input type="text" [(ngModel)]="pickUp"></ion-input><ion-icon name="navigate" item-right></ion-icon>\n		</ion-item>\n		<ion-row>\n			<ion-col col-3 offset-4>\n			<button ion-button color="primary" clear style="align-self: center;" (click)="changeAddress()"> Add Unit Number<p style="color: red">*</p></button>\n		</ion-col>\n		</ion-row>\n\n	</ion-row>\n\n\n		<ion-row padding>\n\n			<ion-label style="font-weight: bold;"> Drop-Off Location</ion-label>\n\n		</ion-row>\n\n		<ion-row radio-group [(ngModel)]="same">\n	 		<ion-col col-6>\n	 			<ion-item no-lines>\n	 				<ion-radio value="same" (ionSelect)="locationSelect(\'same\')"></ion-radio><ion-label> Same</ion-label>\n	 			</ion-item>\n	 		</ion-col>\n	 		<ion-col col-6>\n	 			<ion-item no-lines>\n	 				<ion-radio value="other" (ionSelect)="locationSelect(\'other\')"></ion-radio><ion-label> Other </ion-label>\n	 			</ion-item>\n	 		</ion-col>\n		</ion-row>\n\n		<ion-row>\n\n			<ion-item *ngIf="same == \'other\'">\n				<!--<ion-label floating> Drop-Off Location </ion-label>-->\n				<ion-input type="text" [(ngModel)]="dropOff" value="" ></ion-input><ion-icon name="navigate" item-right>\n				</ion-icon>\n			</ion-item>\n		</ion-row>\n\n		<ion-row>\n				<ion-col col-3 offset-3>\n				<button ion-button color="primary" clear style="align-self: center;" (click)="changeAddress()"> Add Unit Number<p style="color: red">*</p></button>\n			</ion-col>\n		</ion-row>\n\n\n\n	<ion-row>\n		<ion-row padding>\n			<ion-label style="font-weight: bold;"> Instructions of Walk </ion-label>\n		</ion-row>\n\n		<ion-item>\n			<ion-input [(ngModel)]="info" type="text" placeholder="(passcode, keycode, leash, doorman)"> </ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n\n	<ion-row>\n		<ion-row padding>\n			<ion-label style="font-weight: bold;"> Reciever\'s Name </ion-label>\n		</ion-row>\n		<ion-item>\n			<ion-input [(ngModel)]="receiverName" type="text" placeholder="(please add name if address drop-off change)"></ion-input>\n		</ion-item>\n	</ion-row>\n\n\n	<!--\n	<ion-row>\n\n		<ion-item>\n\n			<ion-label floating> Receiver\'s phone number </ion-label>\n			<ion-input [(ngModel)]="receiverPhone" type="text"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n-->\n\n	<ion-row>	\n			<button ion-button color="orange" block (click)="saveToFirestore()"> Continue </button>\n	</ion-row>\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/book-walk/book-walk.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */],
@@ -3585,176 +2886,21 @@ var BookWalkPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 74:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CardPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__book_walk_book_walk__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(25);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-
-
-
-
-var CardPage = /** @class */ (function () {
-    function CardPage(navCtrl, navParams, viewCtrl, storage) {
-        var _this = this;
-        this.navCtrl = navCtrl;
-        this.navParams = navParams;
-        this.viewCtrl = viewCtrl;
-        this.storage = storage;
-        this.stripeHandler = function (token) {
-            console.log(token);
-            var form = document.getElementById('payment-form');
-            //this.viewCtrl.dismiss()
-            //this.storage.set('token', token.id)
-            //form.submit()
-            localStorage.setItem('token', JSON.stringify(token.id));
-            _this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_2__book_walk_book_walk__["a" /* BookWalkPage */]);
-        };
-    }
-    CardPage.prototype.ionViewDidLoad = function () {
-        console.log('ionViewDidLoad CardPage');
-        this.stripeForm();
-    };
-    CardPage.prototype.stripeForm = function () {
-        var _this = this;
-        var stripe = Stripe('pk_test_4HfhcQqgPDUrWi93vINXEEhh');
-        // Create an instance of Elements
-        var elements = stripe.elements();
-        // Custom styling can be passed to options when creating an Element.
-        // (Note that this demo uses a wider set of styles than the guide below.)
-        var style = {
-            base: {
-                color: '#32325d',
-                lineHeight: '18px',
-                fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-                fontSmoothing: 'antialiased',
-                fontSize: '16px',
-                '::placeholder': {
-                    color: '#aab7c4'
-                }
-            },
-            invalid: {
-                color: '#fa755a',
-                iconColor: '#fa755a'
-            }
-        };
-        // Create an instance of the card Element
-        var card = elements.create('card', { style: style });
-        // Add an instance of the card Element into the `card-element` <div>
-        card.mount('#card-element');
-        // Handle real-time validation errors from the card Element.
-        card.addEventListener('change', function (event) {
-            var displayError = document.getElementById('card-errors');
-            if (event.error) {
-                displayError.textContent = event.error.message;
-            }
-            else {
-                displayError.textContent = '';
-            }
-        });
-        var form = document.getElementById('payment-form');
-        form.addEventListener('submit', function (event) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, token, error, errorElement;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        event.preventDefault();
-                        return [4 /*yield*/, stripe.createToken(card)];
-                    case 1:
-                        _a = _b.sent(), token = _a.token, error = _a.error;
-                        if (error) {
-                            errorElement = document.getElementById('card-errors');
-                            errorElement.textContent = error.message;
-                        }
-                        else {
-                            // Send the token to your server
-                            this.stripeHandler(token);
-                        }
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-    };
-    CardPage.prototype.close = function () {
-        this.viewCtrl.dismiss();
-    };
-    CardPage = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-card',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/card/card.html"*/'<!--\n  Generated template for the CardPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>card</ion-title>\n\n     <!--<ion-buttons end>\n\n    	<button ion-button (click)="close()"> SAVE</button>\n\n    </ion-buttons>-->\n\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<form action= "" method="post" id="payment-form">\n		 <div class="form-row">\n		    <label for="card-element">\n		      Credit or debit card\n		    </label>\n		    <div id="card-element">\n		      <!-- a Stripe Element will be inserted here. -->\n		    </div>\n\n		    <!-- Used to display form errors -->\n		    <div id="card-errors" role="alert"></div>\n		</div>\n		<button ion-button color="primary" block round>Submit Payment</button>\n	</form>\n\n  \n\n  <p> Note you\'ll only be charged after the service is completed </p>\n\n	<script src="https://unpkg.com/card@2.3.0/dist/card.js"></script>\n  \n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/card/card.html"*/,
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* ViewController */],
-            __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */]])
-    ], CardPage);
-    return CardPage;
-}());
-
-//# sourceMappingURL=card.js.map
-
-/***/ }),
-
-/***/ 75:
+/***/ 49:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return PetPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_camera__ = __webpack_require__(171);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_camera__ = __webpack_require__(114);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__firebase_firestore__ = __webpack_require__(42);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__card_card__ = __webpack_require__(74);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__tabs_tabs__ = __webpack_require__(69);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4__firebase_firestore__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__card_card__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__tabs_tabs__ = __webpack_require__(46);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -3779,14 +2925,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
  * Ionic pages and navigation.
  */
 var PetPage = /** @class */ (function () {
-    function PetPage(navCtrl, navParams, camera, platform, storage, alertCtrl, viewCtrl) {
+    function PetPage(navCtrl, navParams, camera, platform, storage, alertCtrl) {
         this.navCtrl = navCtrl;
         this.navParams = navParams;
         this.camera = camera;
         this.platform = platform;
         this.storage = storage;
         this.alertCtrl = alertCtrl;
-        this.viewCtrl = viewCtrl;
         this.breeds = ['BULLDOG', 'BEAGLE', 'POODLE', 'LABRADOR RETRIEVER', 'GERMAN SHEPHERD', 'ENGLISH MASTIFF', 'SIBERIAN HUSKY',
             'GOLDEN RETRIEVER', 'BOXER', 'BULLDOG', 'BEAGLE', 'POODLE',
             'LABRADOR RETRIEVER', 'GERMAN SHEPHERD', 'ENGLISH MASTIFF', 'SIBERIAN HUSKY', 'GOLDEN RETRIEVER', 'BOXER', 'AUSTRALIAN SHEPHERD', 'YORKSHIRE TERRIER',
@@ -3852,9 +2997,6 @@ var PetPage = /** @class */ (function () {
                 _this.additionalPetPrompt();
             }).catch(function (err) { return console.log(err); });
         }
-    };
-    PetPage.prototype.close = function () {
-        this.viewCtrl.dismiss();
     };
     PetPage.prototype.picChosen = function (event) {
         var _this = this;
@@ -3951,14 +3093,13 @@ var PetPage = /** @class */ (function () {
     };
     PetPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-pet',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/pet/pet.html"*/'<!--\n  Generated template for the PetPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n\n    <ion-buttons end>\n\n    	<button ion-button (click)="close()">Close</button>\n\n    </ion-buttons>\n	<ion-title>Pet</ion-title>\n  </ion-navbar>\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-row>\n\n		<ion-col col-4 offset-4>\n\n			<div>\n				<label for="image_upload"> \n					<img [src]="pic"  class="pet-pic"/>\n				</label>\n				<input name="image_upload" type="file" id="image_upload" style="display: none;" (change)="picChosen($event)">\n				<!--<img [src]="pic" width="90px" class="pet-pic" (click)="choosePic()"/>-->\n			</div>\n\n		</ion-col>\n\n	</ion-row>\n\n	<ion-row>\n\n		<ion-col col-4>\n\n			<label> Name </label>\n\n		</ion-col>\n\n		<ion-col col-8>\n\n			<input type="text" name="" [(ngModel)]="name">\n\n		</ion-col>\n\n	</ion-row>\n\n	<ion-row>\n			<ion-col col-4><ion-label> Breed </ion-label></ion-col>\n			<ion-col col-8>\n				<ion-select [(ngModel)]="breed">\n\n					<ion-option *ngFor="let breed of breeds" [value]="breed">{{breed}}</ion-option>\n\n				</ion-select>\n			</ion-col>\n	</ion-row>\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Age </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="age">\n\n				<ion-option value="<3"> 0 - 3 years old </ion-option>\n				<ion-option value="<6"> 3 - 6 years old </ion-option>\n				<ion-option value="<15"> 10 - 15 years old </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Color </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="color">\n\n				<ion-option value="brown"> Brown </ion-option>\n				<ion-option value="black"> Black </ion-option>\n				<ion-option value="gray"> Gray </ion-option>\n				<ion-option value="white"> White </ion-option>\n				<ion-option value="other" > Other </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Vaccination ontime </ion-label></ion-col>\n			<ion-col col-8><ion-select (ionChange)="vaccinationChange(vaccination)" [(ngModel)]="vaccination">\n\n				<ion-option value="YES"> Yes </ion-option>\n				<ion-option value="NO"> No </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Dog Size </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="size">\n\n				<ion-option value="l"> Large </ion-option>\n				<ion-option value="m"> Medium </ion-option>\n				<ion-option value="s"> Small </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Aggressive </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="aggressive">\n\n				<ion-option value="YES"> YES </ion-option>\n				<ion-option value="NO"> NO </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Social </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="social">\n\n				<ion-option value="YES"> YES </ion-option>\n				<ion-option value="NO"> NO </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n	<ion-row>\n\n		<ion-col col-4>\n\n			<label> About the dog </label>\n\n		</ion-col>\n\n		<ion-col col-8>\n\n			<input type="text" name="" [(ngModel)]="petInfo" />\n\n		</ion-col>\n\n	</ion-row>\n\n\n	<ion-row>	\n			<button ion-button color="orange" block (click)="save()"> Continue </button>\n	</ion-row>\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/pet/pet.html"*/,
+            selector: 'page-pet',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/pet/pet.html"*/'<!--\n  Generated template for the PetPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>Pet</ion-title>\n\n    <!--<ion-buttons end>\n\n    	<button ion-button (click)="save()"> SAVE</button>\n\n    </ion-buttons>-->\n\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-row>\n\n		<ion-col col-4 offset-4>\n\n			<div>\n				<label for="image_upload"> \n					<img [src]="pic"  class="pet-pic"/>\n				</label>\n				<input name="image_upload" type="file" id="image_upload" style="display: none;" (change)="picChosen($event)">\n				<!--<img [src]="pic" width="90px" class="pet-pic" (click)="choosePic()"/>-->\n			</div>\n\n		</ion-col>\n\n	</ion-row>\n\n	<ion-row>\n\n		<ion-col col-4>\n\n			<label> Name </label>\n\n		</ion-col>\n\n		<ion-col col-8>\n\n			<input type="text" name="" [(ngModel)]="name">\n\n		</ion-col>\n\n	</ion-row>\n\n	<ion-row>\n			<ion-col col-4><ion-label> Breed </ion-label></ion-col>\n			<ion-col col-8>\n				<ion-select [(ngModel)]="breed">\n\n					<ion-option *ngFor="let breed of breeds" [value]="breed">{{breed}}</ion-option>\n\n				</ion-select>\n			</ion-col>\n	</ion-row>\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Age </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="age">\n\n				<ion-option value="<3"> 0 - 3 years old </ion-option>\n				<ion-option value="<6"> 3 - 6 years old </ion-option>\n				<ion-option value="<15"> 10 - 15 years old </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Color </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="color">\n\n				<ion-option value="brown"> Brown </ion-option>\n				<ion-option value="black"> Black </ion-option>\n				<ion-option value="gray"> Gray </ion-option>\n				<ion-option value="white"> White </ion-option>\n				<ion-option value="other" > Other </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Vaccination ontime </ion-label></ion-col>\n			<ion-col col-8><ion-select (ionChange)="vaccinationChange(vaccination)" [(ngModel)]="vaccination">\n\n				<ion-option value="YES"> Yes </ion-option>\n				<ion-option value="NO"> No </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Dog Size </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="size">\n\n				<ion-option value="l"> Large </ion-option>\n				<ion-option value="m"> Medium </ion-option>\n				<ion-option value="s"> Small </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Aggressive </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="aggressive">\n\n				<ion-option value="YES"> YES </ion-option>\n				<ion-option value="NO"> NO </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n\n	<ion-row>\n\n			<ion-col col-4><ion-label> Social </ion-label></ion-col>\n			<ion-col col-8><ion-select [(ngModel)]="social">\n\n				<ion-option value="YES"> YES </ion-option>\n				<ion-option value="NO"> NO </ion-option>\n\n			</ion-select></ion-col>\n\n	</ion-row>\n\n\n	<ion-row>\n\n		<ion-col col-4>\n\n			<label> About the dog </label>\n\n		</ion-col>\n\n		<ion-col col-8>\n\n			<input type="text" name="" [(ngModel)]="petInfo" />\n\n		</ion-col>\n\n	</ion-row>\n\n\n	<ion-row>	\n			<button ion-button color="orange" block (click)="save()"> Continue </button>\n	</ion-row>\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/pet/pet.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
             __WEBPACK_IMPORTED_MODULE_2__ionic_native_camera__["a" /* Camera */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* Platform */],
             __WEBPACK_IMPORTED_MODULE_5__ionic_storage__["b" /* Storage */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* ViewController */]])
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]])
     ], PetPage);
     return PetPage;
 }());
@@ -3967,20 +3108,21 @@ var PetPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 76:
+/***/ 50:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SignUpPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_axios__ = __webpack_require__(121);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_axios__ = __webpack_require__(72);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_axios__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__providers_fire_fire__ = __webpack_require__(68);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__firebase_firestore__ = __webpack_require__(42);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__verify_verify__ = __webpack_require__(229);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__providers_config__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__providers_fire_fire__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5__firebase_firestore__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__verify_verify__ = __webpack_require__(150);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__providers_config__ = __webpack_require__(36);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -4075,7 +3217,7 @@ var SignUpPage = /** @class */ (function () {
     };
     SignUpPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-sign-up',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/sign-up/sign-up.html"*/'<ion-header>\n  <ion-navbar>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding>\n\n	<ion-row>\n		<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n	</ion-row>\n\n	<!--\n	<ion-row>\n		<ion-item>\n			<ion-label floating>Name <ion-icon name="person"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="name"></ion-input>\n		</ion-item>\n	</ion-row>\n-->\n\n	<ion-row>\n\n		<ion-item>\n\n			<ion-label floating>Phone <ion-icon name="call"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="phone"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n	<!--\n	<ion-row>\n		<ion-item>\n			<ion-label floating>Password <ion-icon name="key"></ion-icon></ion-label>\n    		<ion-input type="password" [(ngModel)]="password"></ion-input>\n		</ion-item>\n	</ion-row>\n-->\n\n		<br/>\n		<br/>\n	<ion-row>\n		<button ion-button color="orange" block round (click)="login()"> Continue </button>\n	</ion-row>\n	<br/><br/>\n\n	<!--\n	<p text-center><span class="gray">Already Have an Account?</span> <span (click)="login()">Log In</span></p>\n-->\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/sign-up/sign-up.html"*/,
+            selector: 'page-sign-up',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/sign-up/sign-up.html"*/'<ion-header>\n  <ion-navbar>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding>\n\n	<ion-row>\n		<img src="assets/imgs/icon.png" height="250" [ngStyle]="{\'margin\': \'auto\'}"/>\n	</ion-row>\n\n	<!--\n	<ion-row>\n		<ion-item>\n			<ion-label floating>Name <ion-icon name="person"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="name"></ion-input>\n		</ion-item>\n	</ion-row>\n-->\n\n	<ion-row>\n\n		<ion-item>\n\n			<ion-label floating>Phone <ion-icon name="call"></ion-icon></ion-label>\n    		<ion-input type="text" [(ngModel)]="phone"></ion-input>\n\n		</ion-item>\n\n	</ion-row>\n\n	<!--\n	<ion-row>\n		<ion-item>\n			<ion-label floating>Password <ion-icon name="key"></ion-icon></ion-label>\n    		<ion-input type="password" [(ngModel)]="password"></ion-input>\n		</ion-item>\n	</ion-row>\n-->\n\n		<br/>\n		<br/>\n	<ion-row>\n		<button ion-button color="orange" block round (click)="login()"> Continue </button>\n	</ion-row>\n	<br/><br/>\n\n	<!--\n	<p text-center><span class="gray">Already Have an Account?</span> <span (click)="login()">Log In</span></p>\n-->\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/sign-up/sign-up.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
             __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */],
@@ -4088,22 +3230,28 @@ var SignUpPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 861:
+/***/ 61:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MyApp; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return TrackWalkPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__ = __webpack_require__(452);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__ = __webpack_require__(453);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_firebase__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_firebase__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__pages_tabs_tabs__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_geolocation__ = __webpack_require__(114);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_angularfire2_firestore__ = __webpack_require__(201);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__providers_config__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__pages_notifications_alert_notifications_alert__ = __webpack_require__(235);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_geolocation__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__tabs_tabs__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__settings_settings__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__walk_feed_walk_feed__ = __webpack_require__(153);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__notifications_pop_over_notifications_pop_over__ = __webpack_require__(154);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__ionic_native_social_sharing__ = __webpack_require__(125);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_firebase__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_9_firebase__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__report_report__ = __webpack_require__(79);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_mapbox_gl__ = __webpack_require__(244);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_mapbox_gl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_11_mapbox_gl__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__angular_platform_browser__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__rate_walk_rate_walk__ = __webpack_require__(80);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__providers_fire_fire__ = __webpack_require__(45);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -4118,161 +3266,440 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-//import { firebaseConfig } from '../providers/config'
 
 
 
 
 
-var firebaseAuth = __WEBPACK_IMPORTED_MODULE_8__providers_config__["b" /* firebaseConfig */];
-var MyApp = /** @class */ (function () {
-    function MyApp(alertCtrl, modalCtrl, events, platform, statusBar, splashScreen, geolocation, afs) {
-        var _this = this;
-        this.alertCtrl = alertCtrl;
-        this.modalCtrl = modalCtrl;
-        this.events = events;
+
+
+
+
+
+var TrackWalkPage = /** @class */ (function () {
+    function TrackWalkPage(navCtrl, navParams, geolocation, viewCtrl, storage, fire, popCtrl, alertCtrl, events, socialsharing, modalCtrl, zone, sanitizer) {
+        this.navCtrl = navCtrl;
+        this.navParams = navParams;
         this.geolocation = geolocation;
-        this.afs = afs;
-        platform.ready().then(function () {
-            // Okay, so the platform is ready and our plugins are available.
-            // Here you can do any higher level native things you might need.
-            _this.rootPage = __WEBPACK_IMPORTED_MODULE_5__pages_tabs_tabs__["a" /* TabsPage */];
-            statusBar.styleDefault();
-            splashScreen.hide();
-            var geoOptions = {
-                timeout: 10000,
-            };
-            _this.events.subscribe('requestToWalker', function (walkerData, reqData) {
-                var profileModal = _this.modalCtrl.create(__WEBPACK_IMPORTED_MODULE_9__pages_notifications_alert_notifications_alert__["a" /* NotificationAlertPage */], { walkerData: walkerData, reqData: reqData });
-                profileModal.present();
-            });
-            // this.events.subscribe('displayNotification',(client_id,walker_id) => {
-            //     let ref = firebase.database().ref('/requestToWalker').child(client_id).child(walker_id);
-            //     ref.on('value',(snep) => {
-            //       console.log('requestNotification',snep.val());
-            //       let allData = snep.val();
-            //       let metchReq:any;
-            //       for(let tmpkey in allData){
-            //         //console.log('tmpkey',tmpkey);
-            //         if(allData[tmpkey]._id == JSON.parse(localStorage.getItem('setRequestID'))){
-            //           metchReq = allData[tmpkey];
-            //         }
-            //       }
-            //       console.log('metchReq',metchReq);
-            //       //console.log('walkerID',metchReq.walker_id);
-            //       let firestore = firebase.firestore();
-            //       firestore.collection('walkers').where('walker_id', '==', `${metchReq.walker_id}`).get()
-            //       .then((snapshot) => {
-            //           snapshot.forEach((doc) => {
-            //             this.events.publish('requestToWalker',doc.data(),metchReq);
-            //           });
-            //       }).catch((err) => console.log(err));
-            //     });
-            // });
-            /*this.geolocation.getCurrentPosition(geoOptions)
-              .then((pos) => {
-                console.log(pos.coords)
-              })
-              .catch((err) => {
-                console.log(err)
-                alert('we could not get your current location')
-              })*/
-        });
-        __WEBPACK_IMPORTED_MODULE_4_firebase___default.a.initializeApp(firebaseAuth);
-        var firestore = afs.firestore.settings({ timestampsInSnapshots: true });
+        this.viewCtrl = viewCtrl;
+        this.storage = storage;
+        this.fire = fire;
+        this.popCtrl = popCtrl;
+        this.alertCtrl = alertCtrl;
+        this.events = events;
+        this.socialsharing = socialsharing;
+        this.modalCtrl = modalCtrl;
+        this.zone = zone;
+        this.sanitizer = sanitizer;
+        this.path = [];
+        this.speedfactor = 25;
+        this.messages = [];
+        this.geojson = {
+            'type': 'FeatureCollection',
+            'features': [{
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': []
+                    }
+                }]
+        };
+        this.walkersMarkers = [];
+        this.currentMapTrack = null;
+        this.trackedRoute = [];
+        this.variable = true;
     }
-    MyApp.prototype.getLocation = function () {
+    TrackWalkPage.prototype.getSanitizeUrl = function (url) {
+        return this.sanitizer.bypassSecurityTrustUrl(url);
+    };
+    TrackWalkPage.prototype.ionViewDidLoad = function () {
+        var _this = this;
+        console.log('ionViewDidLoad TrackWalkPage');
+        //this.loadMap()
+        //this.walkEnd()
+        this.events.subscribe('message:received', function () {
+            _this.popOver();
+            console.log('received from track walk');
+        });
+    };
+    TrackWalkPage.prototype.ionViewDidEnter = function () {
+        this.request = JSON.parse(localStorage.getItem('request'));
+        console.log('treck Req', this.request);
+        this.date = this.request.duration.time;
+        this.loadMap();
+        this.timeChanges();
+        this.newPics();
+        this.stopChanges();
+    };
+    TrackWalkPage.prototype.ionViewWillLeave = function () {
+        clearInterval(this.treckPosition);
+    };
+    TrackWalkPage.prototype.setLineOnMap = function (walker) {
+        console.log('setLineOnMap', walker);
+        this.trackedRoute.push({ lat: walker.lat, lng: walker.lng });
+        this.redrawPath(this.trackedRoute);
+    };
+    TrackWalkPage.prototype.redrawPath = function (path) {
+        if (this.currentMapTrack) {
+            this.currentMapTrack.setMap(null);
+        }
+        console.log('path', path);
+        if (path.length > 1) {
+            this.currentMapTrack = new google.maps.Polyline({
+                path: path,
+                geodesic: true,
+                strokeColor: '#ff00ff',
+                strokeOpacity: 1.0,
+                strokeWeight: 3
+            });
+            this.currentMapTrack.setMap(this.map);
+        }
+    };
+    TrackWalkPage.prototype.loadMap = function () {
+        var _this = this;
         this.geolocation.getCurrentPosition()
             .then(function (position) {
-            console.log(position);
-            /*let mapOptions = {
- 
-               center : {
-                 lat : position.coords.latitude,
-                 lng : position.coords.longitude,
-             },
-             zoom : 17,
-             mapTypeId : google.maps.MapTypeId.ROADMAP,
-           }
- 
-           this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions)
-           //this.addMarker()
-           //
-           //this.initialMarker()*/
+            _this.lat = position.coords.latitude;
+            _this.lng = position.coords.longitude;
+            var mapOptions = {
+                center: {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                },
+                zoom: 17,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+            };
+            _this.map = new google.maps.Map(_this.mapElement.nativeElement, mapOptions);
+            //this.addMarker()
+            _this.loadMarkerData();
+            //this.initialMarker()
+            //this.loadMapBox(this.lat, this.lng)
         })
             .catch(function (err) {
             alert('We could not get your current location');
             console.log(err);
         });
+        //this.addMarker()
     };
-    MyApp = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/app/app.html"*/'<ion-nav [root]="rootPage"></ion-nav>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/app/app.html"*/
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */],
-            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["b" /* Events */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* Platform */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__["a" /* StatusBar */],
-            __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__["a" /* SplashScreen */],
-            __WEBPACK_IMPORTED_MODULE_6__ionic_native_geolocation__["a" /* Geolocation */],
-            __WEBPACK_IMPORTED_MODULE_7_angularfire2_firestore__["a" /* AngularFirestore */]])
-    ], MyApp);
-    return MyApp;
-}());
+    TrackWalkPage.prototype.loadMarkerData = function () {
+        var _this = this;
+        this.fire.getWalkerPosition(this.request.walker_id).then(function (response) {
+            _this.walkerPosition = response;
+            console.log('walkerPosition', _this.walkerPosition);
+            if (_this.walkerPosition.isActive) {
+                _this.addMapboxMarker(_this.walkerPosition);
+            }
+        });
+        this.treckPosition = setInterval(function () {
+            _this.fire.getWalkerPosition(_this.request.walker_id)
+                .then(function (res) {
+                _this.walkerPosition = res;
+                if (_this.walkerPosition.isActive) {
+                    console.log('walkerPosition', _this.walkerPosition);
+                    _this.clearWalker();
+                    _this.addMapboxMarker(_this.walkerPosition);
+                    if (_this.walkerPosition.isTrecking) {
+                        console.log('isTrecking');
+                        _this.setLineOnMap(_this.walkerPosition);
+                    }
+                }
+            });
+        }, 10000);
+    };
+    TrackWalkPage.prototype.addMarker = function (lat, lng) {
+        this.marker = new google.maps.Marker({
+            position: {
+                lat: lat,
+                lng: lng // -122.420453,
+            },
+            //icon : walker.pic,
+            map: this.map,
+        });
+        return this.marker;
+    };
+    TrackWalkPage.prototype.addPolyline = function () {
+        var walkPath = new google.maps.Polyline({
+            path: this.path,
+            geodesic: true,
+            strokeColor: '#FF0000',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+        });
+        walkPath.setMap(this.map);
+    };
+    TrackWalkPage.prototype.loadData = function () {
+        /*this.storage.get('request')
+        .then((val)=> {
+        this.request = val
+        console.log(this.request)
+        this.initialMarker()
+        })
+        .catch((err) => console.log(err))*/
+    };
+    TrackWalkPage.prototype.initialMarker = function () {
+        var _this = this;
+        __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("/requests/" + this.request._id).once('value')
+            .then(function (snap) {
+            _this.lat = snap.val().lat;
+            _this.lng = snap.val().lng;
+            //this.marker.setPosition(lat, lng)
+            //let latLng = new google.maps.LatLng(lat, lng)
+            //this.marker.setPosition(latLng)
+            _this.addMarker(_this.lat, _this.lng);
+        })
+            .catch(function (err) {
+            console.log(err);
+        });
+    };
+    TrackWalkPage.prototype.listenForChanges = function () {
+        var _this = this;
+        __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("/requests/" + this.request._id).on('value', function (snap) {
+            console.log(snap.val());
+            var lat = snap.val().lat;
+            var lng = snap.val().lng;
+            _this.date = snap.val().date;
+            _this.lat = lat;
+            _this.lng = lng;
+            _this.path.push({ lat: _this.lat, lng: _this.lng });
+            _this.addPolyline();
+            //this.marker.setPosition(lat, lng)
+            var latLng = new google.maps.LatLng(lat, lng);
+            _this.marker.setPosition(latLng);
+            //this.addMarker(lat, lng)
+        });
+    };
+    TrackWalkPage.prototype.message = function () {
+        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_6__walk_feed_walk_feed__["a" /* WalkFeedPage */]);
+    };
+    TrackWalkPage.prototype.close = function () {
+        this.viewCtrl.dismiss();
+        this.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_3__tabs_tabs__["a" /* TabsPage */]);
+    };
+    TrackWalkPage.prototype.popOver = function () {
+        var alertPopOver = this.popCtrl.create(__WEBPACK_IMPORTED_MODULE_7__notifications_pop_over_notifications_pop_over__["a" /* NotificationsPopOverPage */], { cssClass: 'inset-modal' });
+        alertPopOver.present();
+    };
+    TrackWalkPage.prototype.cancel = function () {
+        var prompt = this.alertCtrl.create({
+            message: /*`<div class="container">
 
-//# sourceMappingURL=app.component.js.map
+            <div class="pop-over">
+            <div class="picture-wrapper">
 
-/***/ }),
+            <div class="main-pic">
+            <img src="assets/imgs/snowball.png"  class="pet-pic"/>
+            </div>
 
-/***/ 862:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+            <div class="green-check">
+            <img src="assets/imgs/greencheck.svg"/>
+            </div>
+            </div>
 
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AboutPage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
+            <div class="pop-over-message">
+            <p> Are you sure, you want to cancel the walk? </p>
+            </div>
 
+            </div>
 
-var AboutPage = /** @class */ (function () {
-    function AboutPage(navCtrl) {
-        this.navCtrl = navCtrl;
-    }
-    AboutPage = __decorate([
+            </div>`,*/ 'Are you sure, you want to cancel the walk',
+            buttons: [
+                {
+                    text: 'NO',
+                    handler: function (data) { }
+                },
+                {
+                    text: 'YES, cancel',
+                    handler: function (data) { }
+                }
+            ],
+            cssClass: 'ion-modal.inset-modal',
+        });
+        prompt.present();
+    };
+    TrackWalkPage.prototype.share = function (image) {
+        this.socialsharing.share("Pic's from my dog's walk by UDog", "UDog Walk", image).then(function () {
+            console.log("shareSheetShare: Success");
+        }).catch(function () {
+            console.error("shareSheetShare: failed");
+        });
+    };
+    TrackWalkPage.prototype.settings = function () {
+        var settingsModal = this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_4__settings_settings__["a" /* SettingsPage */]);
+    };
+    TrackWalkPage.prototype.walkEnd = function () {
+        __WEBPACK_IMPORTED_MODULE_9_firebase__["firestore"]().collection("walks").where('walkended', '==', true).where('_id', '==', this.request._id)
+            .onSnapshot(function (querySnapshot) {
+            querySnapshot.forEach(function (doc) {
+                this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_10__report_report__["a" /* ReportPage */]);
+            });
+        });
+    };
+    TrackWalkPage.prototype.mapboxPath = function () {
+        this.map.addSource('trace', {
+            'type': 'geojson',
+            'data': this.geojson
+        });
+        this.map.addLayer({
+            'id': 'trace',
+            'type': 'line',
+            'source': 'trace',
+            'layout': {
+                'line-cap': 'round',
+                'line-join': 'round',
+            },
+            'paint': {
+                'line-color': '#4A90E2',
+                'line-width': 4,
+                'line-opacity': 0.6
+            }
+        });
+        //this.map.jumpTo({ 'center' : [this.geojson.features[0].geometry.coordinates[0]], 'zoom' : 14})
+    };
+    TrackWalkPage.prototype.pathChanges = function () {
+        var _this = this;
+        var walkRef = __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("walks/path/" + this.request.id);
+        walkRef.on('child_added', function (data) {
+            //console.log('pathChanges',data.val());
+            _this.path.push({ lng: data.val().lng, lat: data.val().lat });
+            _this.lat = data.val().lat;
+            _this.lng = data.val().lng;
+            _this.geojson.features[0].geometry.coordinates.push([data.val().lng, data.val().lat]);
+            _this.map.getSource('trace').setData(_this.geojson);
+            _this.map.panTo([_this.lng, _this.lat]);
+        });
+    };
+    TrackWalkPage.prototype.timeChanges = function () {
+        var _this = this;
+        var timeRef = __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("walks/time/" + this.request.id);
+        timeRef.on('value', function (data) {
+            console.log('timeChanges', data.val());
+            if (data.val() !== null) {
+                _this.date = data.val().date;
+            }
+        });
+    };
+    TrackWalkPage.prototype.stopChanges = function () {
+        var _this = this;
+        var timeRef = __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("walks/stop/" + this.request.id);
+        timeRef.on('value', function (data) {
+            console.log('stopChanges', data.val());
+            if (data.val() !== null) {
+                //this.date = data.val().date
+                if (data.val().stop == true) {
+                    _this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_13__rate_walk_rate_walk__["a" /* RateWalkPage */]);
+                    __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]()
+                        .ref("/walks/stop/" + _this.request.id)
+                        .off();
+                }
+            }
+        });
+    };
+    TrackWalkPage.prototype.loadMapBox = function (lat, lng) {
+        __WEBPACK_IMPORTED_MODULE_11_mapbox_gl___default.a.accessToken = 'pk.eyJ1IjoidWRvZyIsImEiOiJjamZlZnNzOHgwN2ZjMzNsOXpsamFzNXZ3In0.OtgpQ6_vMLQGyifAdgcCDQ';
+        var mapCanvas = document.getElementsByClassName('mapboxgl-canvas').item(0);
+        this.map = new __WEBPACK_IMPORTED_MODULE_11_mapbox_gl___default.a.Map({
+            container: this.mapElement.nativeElement,
+            style: 'mapbox://styles/mapbox/streets-v9',
+            zoom: 14,
+            center: [lng, lat]
+        });
+        //mapCanvas.style.height = '100%'
+        //mapCanvas.style.width = '25%'
+        //this.initialMapboxMarker(lat,lng)
+        this.map.on('load', function () {
+            //this.mapboxPath()
+            //this.pathChanges()
+        });
+    };
+    TrackWalkPage.prototype.newPics = function () {
+        var _this = this;
+        var messagesRef = __WEBPACK_IMPORTED_MODULE_9_firebase__["database"]().ref("messages/" + this.request.id);
+        messagesRef.on('child_added', function (data) {
+            if (data.val().message.type === 'image' && data.val().message.from === 'walker') {
+                _this.messages.push(data.val().message);
+            }
+        });
+    };
+    TrackWalkPage.prototype.clearWalker = function () {
+        this.walkersMarkers.forEach(function (walkers) {
+            walkers.setMap(null);
+        });
+    };
+    TrackWalkPage.prototype.addMapboxMarker = function (walkerData) {
+        //console.log('addMapboxMarker',walkerData);
+        var _this = this;
+        this.zone.run(function () {
+            // let el = document.createElement('div')
+            //   el.className = 'marker'
+            //   el.style.backgroundImage = `url(${walkerData.walker.pic})`
+            //   el.style.backgroundRepeat = 'no-repeat'
+            //   el.style.backgroundSize = '50px 50px'
+            //   el.style.width = '50px'
+            //   el.style.height = '50px'
+            var image = new google.maps.MarkerImage(walkerData.walker.pic, null, null, null, new google.maps.Size(40, 52));
+            var marker = new google.maps.Marker({
+                position: {
+                    lat: walkerData.lat,
+                    lng: walkerData.lng // -122.420453,
+                },
+                icon: image,
+                map: _this.map
+            });
+            _this.walkersMarkers.push(marker);
+            return marker;
+        });
+    };
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_9" /* ViewChild */])('map'),
+        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_0__angular_core__["u" /* ElementRef */])
+    ], TrackWalkPage.prototype, "mapElement", void 0);
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_9" /* ViewChild */])('tabs'),
+        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["l" /* Tabs */])
+    ], TrackWalkPage.prototype, "primaryTabs", void 0);
+    TrackWalkPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
-            selector: 'page-about',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/about/about.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title text-center>\n      Notifications\n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding>\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-client/src/pages/about/about.html"*/
+            selector: 'page-track-walk',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/track-walk/track-walk.html"*/'<!--\n  Generated template for the TrackWalkPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>TrackWalk</ion-title>\n\n    <!--<ion-buttons end>\n\n      <button ion-button (click)="close()"> CLOSE</button>\n\n    </ion-buttons>-->\n\n    <ion-buttons end>\n\n      <button ion-button icon-only (click)="settings()">\n        <ion-icon name="more"></ion-icon>\n      </button>\n    </ion-buttons>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<div #map id = "map"></div>\n	<ion-item-divider [ngStyle]="{\'background-color\': \'#D0021B\'}">{{ date }} min remaining</ion-item-divider>\n\n	<!--<ion-item-divider color="yellow">35 min walk\n		<p> 1 mile</p>\n	</ion-item-divider>-->\n\n<!--  --><!--   <ion-row >\n\n   <ion-col col-6>\n      <button icon-end class="trackwalk-button contact-walker" type="button">\n        <div class="button-text">\n          Contact Walker \n        </div>\n        <div class="button-icon">\n        <ion-icon name="ios-call-outline"></ion-icon>\n      </div>\n      </button>\n</ion-col>\n\n   <ion-col col-6>\n      <button icon-end class="trackwalk-button" type="button" (click)="popOver()">\n        <div class="button-text">\n          Request Pictures\n          </div>\n          <div class="button-icon"> \n        <ion-icon name="ios-camera-outline"></ion-icon>\n          </div>\n      </button>\n  </ion-col>\n\n</ion-row>\n\n<ion-row>\n\n    <ion-col col-6>\n      <button icon-end class="trackwalk-button message-walker" type="button" (click)="message()">\n        <div class="button-text">\n          Message Walker\n          </div>\n          <div class="button-icon"> \n        <ion-icon name="ios-mail-outline"></ion-icon>\n      </div>\n      </button>\n  </ion-col>\n\n    <ion-col col-6>\n      <button icon-end class="trackwalk-button" type="button" (click)="cancel()">\n        <div class="button-text">\n          Cancel Walk \n        </div>\n        <div class="button-icon">\n          <ion-icon name="ios-close-circle-outline"></ion-icon>\n        </div>\n          <!-<img src="assets/imgs/cancel.svg" height="15" width="15"/> -->\n<!--       </button>\n  </ion-col>\n</ion-row> --> \n\n\n<div class="button-container">\n<div class="top">\n  <div class="contact-walker">\n      <button icon-end class="trackwalk-button contact-walker" type="button">\n        <div class="button-text">\n          Contact Walker \n        </div>\n        <div class="button-icon">\n        <ion-icon name="ios-call-outline"></ion-icon>\n        </div>\n      </button>\n  </div>\n\n  <div class="request-pic">\n      <button icon-end class="trackwalk-button" type="button" (click)="popOver()">\n        <div class="button-text">\n          Request Pictures\n          </div>\n          <div class="button-icon"> \n        <ion-icon name="ios-camera-outline"></ion-icon>\n          </div>\n      </button>\n  </div>\n</div>\n\n<div class="bottom">\n  <!-- <div class="message-walker">\n      <button icon-end class="trackwalk-button message-walker" type="button" (click)="message()">\n        <div class="button-text">\n          Message Walker\n          </div>\n          <div class="button-icon"> \n        <ion-icon name="ios-mail-outline"></ion-icon>\n      </div>\n      </button>\n  </div> -->\n\n  <div class="cancel-walk">\n       <button icon-end class="trackwalk-button" type="button" (click)="cancel()">\n        <div class="button-text">\n          Cancel Walk \n        </div>\n        <div class="button-icon">\n          <ion-icon name="ios-close-circle-outline"></ion-icon>\n        </div>\n          <!-- <img src="assets/imgs/cancel.svg" height="15" width="15"/> -->\n        </button>\n  </div>\n</div>\n</div>\n\n<ion-fab bottom right #fab>\n  <button ion-fab style="background: black;" type="button" (click)="message()" no-padding><ion-icon name="ios-mail-outline"></ion-icon></button>\n</ion-fab>\n\n    <ion-item-divider>IMAGES\n   \n  </ion-item-divider>\n\n    <ion-scroll scrollX=true style="width: 100%; height: 20%;">\n\n          <!--<img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" (click)="share()"/>\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />\n\n          <img src="https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8" width="100" height="100" />-->\n\n          <ion-list no-lines>\n      <ion-item *ngFor="let message of messages" [ngSwitch]="message.type">\n        <p *ngSwitchCase=" \'text\' ">{{ message.txt}}</p>\n        <img *ngSwitchCase=" \'image\' " [src]="sanitizer.bypassSecurityTrustUrl(message.url)" width="100" height="100" (click)="share(message.url)"/> \n      </ion-item>\n    </ion-list>\n\n  </ion-scroll>\n\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/track-walk/track-walk.html"*/,
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */]])
-    ], AboutPage);
-    return AboutPage;
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
+            __WEBPACK_IMPORTED_MODULE_2__ionic_native_geolocation__["a" /* Geolocation */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["m" /* ViewController */],
+            __WEBPACK_IMPORTED_MODULE_5__ionic_storage__["b" /* Storage */],
+            __WEBPACK_IMPORTED_MODULE_14__providers_fire_fire__["a" /* FireProvider */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* PopoverController */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["b" /* Events */],
+            __WEBPACK_IMPORTED_MODULE_8__ionic_native_social_sharing__["a" /* SocialSharing */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */],
+            __WEBPACK_IMPORTED_MODULE_0__angular_core__["N" /* NgZone */],
+            __WEBPACK_IMPORTED_MODULE_12__angular_platform_browser__["c" /* DomSanitizer */]])
+    ], TrackWalkPage);
+    return TrackWalkPage;
 }());
 
-//# sourceMappingURL=about.js.map
+//# sourceMappingURL=track-walk.js.map
 
 /***/ }),
 
-/***/ 872:
+/***/ 62:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ApiServiceProvider; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WalksPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(166);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_map__ = __webpack_require__(195);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_map__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_add_operator_catch__ = __webpack_require__(327);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_add_operator_catch___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_rxjs_add_operator_catch__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_throw__ = __webpack_require__(318);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_throw___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_throw__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__providers_config__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_axios__ = __webpack_require__(72);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_axios__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__providers_config__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__track_walk_track_walk__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__report_report__ = __webpack_require__(79);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_firebase__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_firebase__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__sign_up_sign_up__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_9__firebase_firestore__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__providers_client_client__ = __webpack_require__(116);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -4290,71 +3717,500 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var API_URL = __WEBPACK_IMPORTED_MODULE_7__providers_config__["a" /* API_URL */];
-var ApiServiceProvider = /** @class */ (function () {
-    function ApiServiceProvider(http, plt) {
-        this.http = http;
-        this.plt = plt;
-        this.headers = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["a" /* Headers */]();
+
+
+
+var API_URL = __WEBPACK_IMPORTED_MODULE_4__providers_config__["a" /* API_URL */];
+/**
+ * Generated class for the WalksPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+var WalksPage = /** @class */ (function () {
+    function WalksPage(navCtrl, navParams, modalCtrl, storage, client_provider, events, platform) {
+        //console.log(this.client_provider.client.client_id)
+        this.navCtrl = navCtrl;
+        this.navParams = navParams;
+        this.modalCtrl = modalCtrl;
+        this.storage = storage;
+        this.client_provider = client_provider;
+        this.events = events;
+        this.platform = platform;
+        this.pendingWalks = [];
+        this.completedWalks = [];
+        this.client_id = '8564b56e-fbbc-11e7-b062-dbaa40bb4ff2';
+        //this.loadData()
+        /*this.events.subscribe('client:in', () => {
+          console.log('new_event')
+          //this.loadData()
+          location.reload()
+        })
+    
+        this.events.subscribe('walk:booking', () => {
+          this.navCtrl.setRoot(TrackWalkPage)
+          //this.loadData()
+          location.reload()
+        })*/
     }
-    ApiServiceProvider.prototype.getWalkers = function () {
-        return this.get(this.getPath('active'));
+    WalksPage.prototype.ionViewDidLoad = function () {
+        console.log('ionViewDidLoad WalksPage');
     };
-    ApiServiceProvider.prototype.setAuthorizationHeader = function () {
-        var token = localStorage.getItem('token');
-        if (this.headers.has('Authorization')) {
-            this.headers.set('Authorization', 'Bearer ' + token);
+    WalksPage.prototype.ionViewDidEnter = function () {
+        // this.client = JSON.parse(localStorage.getItem('client'))
+        // this.pastWalks()
+        // this.notificationsFire()
+        this.client = JSON.parse(localStorage.getItem('client'));
+        if (this.client) {
+            if (this.client.pic != null) {
+                //this.client.pic = 'https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8'
+                this.pastWalks();
+                this.notificationsFire();
+            }
         }
         else {
-            this.headers.append('Authorization', 'Bearer ' + token);
+            this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_8__sign_up_sign_up__["a" /* SignUpPage */], { startPage: 'walks' });
         }
-        return this.headers;
     };
-    ApiServiceProvider.prototype.get = function (uri, collection) {
-        // this.headers = this.setAuthorizationHeader();
+    WalksPage.prototype.ngOnInit = function () {
+        //this.fetchActiveWalks()
+        //this.loadData()
+    };
+    WalksPage.prototype.loadData = function () {
         var _this = this;
-        if (collection === void 0) { collection = true; }
-        return this.http
-            .get(uri, { headers: this.headers })
-            .map(function (response) {
-            return _this.getResponse(response, collection);
+        this.platform.ready()
+            .then(function () {
+            _this.storage.get('client')
+                .then(function (val) {
+                _this.client = val;
+                console.log(_this.client);
+                _this.client_id = val.client_id;
+                console.log(_this.client_id);
+                //this.fetchActiveWalks()
+                //this.fetchCompletedWalks()
+                _this.notificationsFire();
+                _this.pastWalks();
+            })
+                .catch(function (err) { return console.log(err); });
         })
-            .catch(this.handleError);
+            .catch(function (err) { return console.log(err); });
     };
-    ApiServiceProvider.prototype.post = function (uri, data, collection) {
-        // this.headers = this.setAuthorizationHeader();
+    WalksPage.prototype.notificationsFire = function () {
         var _this = this;
-        if (collection === void 0) { collection = false; }
-        return this.http.post(uri, data, { headers: this.headers })
-            .map(function (response) {
-            // return response.json()['data'];
-            return _this.getResponse(response, collection);
+        var firestore = __WEBPACK_IMPORTED_MODULE_7_firebase__["firestore"]();
+        firestore.collection('walks').where('client_id', '==', "" + this.client.client_id).where('pending', '==', true)
+            .get()
+            .then(function (snapshot) {
+            snapshot.forEach(function (doc) {
+                console.log(doc.id);
+                console.log(doc.data());
+                _this.pendingWalks.push(doc.data());
+            });
         })
-            .catch(this.handleError);
+            .catch(function (err) { return console.log(err); });
     };
-    ApiServiceProvider.prototype.getResponse = function (response, collection) {
-        var resp = response.json();
-        if (!collection) {
-            return resp;
-        }
-        return resp.map(function (resp) { return resp; });
+    WalksPage.prototype.fetchActiveWalks = function () {
+        var _this = this;
+        __WEBPACK_IMPORTED_MODULE_3_axios___default.a.get(API_URL + ("walks?client_id=" + this.client.client_id)) //walker_id
+            .then(function (res) {
+            _this.pendingWalks = res.data;
+        })
+            .catch(function (err) {
+            console.log(err);
+        });
     };
-    ApiServiceProvider.prototype.handleError = function (error) {
-        return __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].throw(error);
+    WalksPage.prototype.fetchCompletedWalks = function () {
+        var _this = this;
+        __WEBPACK_IMPORTED_MODULE_3_axios___default.a.get(API_URL + ("completed_walks?client_id=" + this.client.client_id)) //walker_id
+            .then(function (res) {
+            _this.completedWalks = res.data;
+        })
+            .catch(function (err) {
+            console.log(err);
+        });
     };
-    ApiServiceProvider.prototype.getPath = function (uri) {
-        return __WEBPACK_IMPORTED_MODULE_7__providers_config__["a" /* API_URL */] + uri;
+    WalksPage.prototype.pastWalks = function () {
+        var _this = this;
+        var firestore = __WEBPACK_IMPORTED_MODULE_7_firebase__["firestore"]();
+        firestore.collection('walks').where('client_id', '==', "" + this.client.client_id).where('pending', '==', false)
+            .get()
+            .then(function (snapshot) {
+            snapshot.forEach(function (doc) {
+                console.log(doc.id);
+                console.log(doc.data());
+                _this.completedWalks.push(doc.data());
+            });
+        })
+            .catch(function (err) { return console.log(err); });
     };
-    ApiServiceProvider = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["B" /* Injectable */])(),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__angular_http__["b" /* Http */], __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["j" /* Platform */]])
-    ], ApiServiceProvider);
-    return ApiServiceProvider;
+    WalksPage.prototype.review = function (walk) {
+        //this.storage.set('walk', walk)
+        localStorage.setItem('walk', JSON.stringify(walk));
+        console.log(walk);
+        var reviewModal = this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_6__report_report__["a" /* ReportPage */]);
+        //reviewModal.present()
+    };
+    WalksPage.prototype.track = function (event, request) {
+        event.stopPropagation();
+        //this.storage.set('request', request)
+        localStorage.setItem('request', JSON.stringify(request));
+        var trackWalkModal = this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_5__track_walk_track_walk__["a" /* TrackWalkPage */]);
+        //trackWalkModal.present()
+    };
+    WalksPage.prototype.ionViewDidLeave = function () {
+        this.pendingWalks = [];
+        this.completedWalks = [];
+    };
+    WalksPage = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'page-walks',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/walks/walks.html"*/'<!--\n  Generated template for the WalksPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>walks</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-list>\n\n		<ion-item-group>\n			<ion-item-divider color=\'light\'> Active & Pending Walks </ion-item-divider>\n				<ion-item *ngFor="let walk of pendingWalks" (click)="openRequest(notif)">\n					 <ion-avatar item-start>\n		      			<img [src]="walk?.pet.pic">\n		    		</ion-avatar>\n					<p>{{ walk?.time }}</p>\n					<p>{{ walk?.pickUp }}</p>\n					<button item-content ion-button round color="danger" item-end (click)="track($event, walk)"> TRACK </button>\n				</ion-item>\n				<ion-item-options side="right">\n\n		    	</ion-item-options>\n	    </ion-item-group>\n\n\n	    <ion-item-group>\n			<ion-item-divider color=\'light\'> Past Walks </ion-item-divider>\n				<ion-item *ngFor="let walk of completedWalks" (click)="review(walk)">\n					 <ion-avatar item-start>\n		      			<img [src]="walk?.pet.pic">\n		    		</ion-avatar>\n					<p>{{ walk?.time }}</p>\n					<p>{{ walk?.pickUp }}</p>\n					<!--<button item-content ion-button round color="danger" item-end (click)="walkIntention($event)"> TRACK </button>-->\n				</ion-item>\n				<ion-item-options side="right">\n\n		    	</ion-item-options>\n	    </ion-item-group>\n	\n	</ion-list>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/walks/walks.html"*/,
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */],
+            __WEBPACK_IMPORTED_MODULE_2__ionic_storage__["b" /* Storage */],
+            __WEBPACK_IMPORTED_MODULE_10__providers_client_client__["a" /* ClientProvider */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["b" /* Events */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* Platform */]])
+    ], WalksPage);
+    return WalksPage;
 }());
 
-//# sourceMappingURL=api-service.js.map
+//# sourceMappingURL=walks.js.map
+
+/***/ }),
+
+/***/ 71:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ProfilePage; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__pet_pet__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__settings_settings__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__sign_up_sign_up__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_firebase__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_firebase__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6__firebase_firestore__);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+
+
+var ProfilePage = /** @class */ (function () {
+    function ProfilePage(navCtrl, modalCtrl) {
+        this.navCtrl = navCtrl;
+        this.modalCtrl = modalCtrl;
+        this.client = {
+            pic: 'https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8',
+            name: 'Fullname',
+            email: 'Your email',
+        };
+        this.pic = 'https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8';
+        this.walks = 0;
+    }
+    ProfilePage.prototype.ionViewDidEnter = function () {
+        this.client = JSON.parse(localStorage.getItem('client'));
+        if (this.client) {
+            if (this.client.pic != null) {
+                //this.client.pic = 'https://images.unsplash.com/photo-1508554291109-58244036f52e?auto=format&fit=crop&w=934&q=8'
+                this.pic = this.client.pic;
+                this.numberOfPets();
+            }
+        }
+        else {
+            this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_4__sign_up_sign_up__["a" /* SignUpPage */], { startPage: 'profile' });
+        }
+    };
+    ProfilePage.prototype.numberOfPets = function () {
+        var pets = JSON.parse(localStorage.getItem('pets'));
+        this.pets = pets.length;
+    };
+    ProfilePage.prototype.addPet = function () {
+        var petModal = this.modalCtrl.create(__WEBPACK_IMPORTED_MODULE_2__pet_pet__["a" /* PetPage */]);
+        petModal.present();
+    };
+    ProfilePage.prototype.settings = function () {
+        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_3__settings_settings__["a" /* SettingsPage */]);
+        //settingsModal.present()
+    };
+    ProfilePage.prototype.picChosen = function (event) {
+        var _this = this;
+        var _id = (Date.now()).toString();
+        var imageRef = __WEBPACK_IMPORTED_MODULE_5_firebase__["storage"]().ref().child(_id);
+        var file = event.target.files[0];
+        var reader = new FileReader();
+        reader.onload = function (event) {
+            _this.pic = reader.result;
+            imageRef.putString(_this.pic, 'data_url')
+                .then(function (snap) {
+                //this.pic = snap.downloadURL
+                _this.client.pic = snap.downloadURL;
+                localStorage.setItem('client', JSON.stringify(_this.client));
+            })
+                .catch(function (err) { return console.log(err); });
+        };
+        reader.readAsDataURL(file);
+    };
+    ProfilePage = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'page-profile',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/profile/profile.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title text-center>\n      My Profile\n    </ion-title>\n\n    <ion-buttons end>\n\n      <button ion-button icon-only (click)="settings()">\n        <ion-icon name="more"></ion-icon>\n      </button>\n    </ion-buttons>\n  </ion-navbar>\n</ion-header>\n\n<ion-content>\n  <div class="profile-container" padding>\n  <ion-list>\n    <!--<img [src]="client?.pic" class="profile-image" />-->\n	<div>\n		<label for="image_upload"> \n			<img [src]="pic"  class="profile-image"/>\n		</label>\n		<input name="image_upload" type="file" id="image_upload" style="display: none;" (change)="picChosen($event)">\n		<!--<img [src]="pic" width="90px" class="pet-pic" (click)="choosePic()"/>-->\n	</div>\n    <p text-center>\n      <span class="name">{{client?.name}}</span>\n      <br/>\n      <span class="email">{{client?.email}}</span>\n    </p>\n  </ion-list>\n  </div>\n\n<!--\n  <ion-row [ngStyle]="{\'background-color\': \'#F2F2F2\'}" padding>\n      <ion-col text-center no-padding col-3>\n        <img src="assets/imgs/walker-icon.png" width="35px" />\n      </ion-col>\n      <ion-col text-left no-padding col-7>\n        <p>Become a Walker</p>\n      </ion-col>\n      <ion-col text-right no-padding col-2>\n        <img src="assets/imgs/plus-icon.png" width="35px" />\n      </ion-col>\n  </ion-row>\n-->\n\n    <ion-row [ngStyle]="{\'background-color\': \'#FFFFFF\'}" padding>\n\n      <ion-col text-center padding col-4>\n        <ion-row>\n          <ion-col col-12>\n              <span class="text-bold stats-num">{{pets}}</span>\n          </ion-col>\n          <ion-col col-12>\n            <span class="brown stats-label">My Pets</span>\n          </ion-col>\n        </ion-row>\n      </ion-col>\n\n      <ion-col text-left padding col-8 [ngStyle]="{\'border-left\': \'1px solid #EDEDED\'}">\n        <ion-row>\n          <ion-col col-12>\n            <span class="text-bold stats-num">{{walks}}</span>\n          </ion-col>\n          <ion-col col-12>\n            <span class="gray stats-label">Appointments</span>\n          </ion-col>\n        </ion-row>\n      </ion-col>\n\n    </ion-row>\n\n    <ion-row [ngStyle]="{\'background-color\': \'#F2F2F2\'}" padding>\n      <ion-col text-center no-padding col-3>\n        <img src="assets/imgs/pet-icon.png" height="40px" />\n      </ion-col>\n      <ion-col text-left no-padding col-7>\n        <p>Add a pet</p>\n      </ion-col>\n      <ion-col text-right no-padding col-2>\n        <div tappable (click)="addPet()">\n          <img src="assets/imgs/plus-icon.png" width="35px"/>\n        </div>\n      </ion-col>\n    </ion-row>\n\n    <ion-row [ngStyle]="{\'background-color\': \'#ffffff\', \'text-align\' : \'center\'}" padding *ngIf="pets == 0" >\n      <ion-col>\n        No pets in the list!\n      </ion-col>\n    </ion-row>\n\n    <ion-row [ngStyle]="{\'background-color\': \'#ffffff\'}" padding >\n      <ion-col text-center no-padding col-3>\n        <img src="assets/imgs/snowball.png" width="90px" class="pet-pic"/>\n      </ion-col>\n      <ion-col text-left no-padding col-6>\n        <p>Snowball<br>\n        <span class="last-walk">Last walk Dec 3, 2016</span>\n      </p>\n      </ion-col>\n      <ion-col text-right no-padding col-3>\n        <p>5 Walks</p>\n      </ion-col>\n    </ion-row>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/profile/profile.html"*/
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */]])
+    ], ProfilePage);
+    return ProfilePage;
+}());
+
+//# sourceMappingURL=profile.js.map
+
+/***/ }),
+
+/***/ 78:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SettingsPage; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__editprofile_editprofile__ = __webpack_require__(148);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__pets_pets__ = __webpack_require__(149);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+/**
+ * Generated class for the SettingsPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+var SettingsPage = /** @class */ (function () {
+    function SettingsPage(navCtrl, navParams) {
+        this.navCtrl = navCtrl;
+        this.navParams = navParams;
+    }
+    SettingsPage.prototype.ionViewDidLoad = function () {
+        console.log('ionViewDidLoad SettingsPage');
+    };
+    SettingsPage.prototype.edit = function () {
+        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_2__editprofile_editprofile__["a" /* EditprofilePage */]);
+    };
+    SettingsPage.prototype.pets = function () {
+        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_3__pets_pets__["a" /* PetsPage */]);
+    };
+    SettingsPage = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'page-settings',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/settings/settings.html"*/'<!--\n  Generated template for the SettingsPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>settings</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<ion-list>\n\n		<ion-item-group>\n    		<ion-item-divider color="yellow">My Account</ion-item-divider>\n    		<button ion-item (click)="edit()">Edit Profile</button>\n    		<button ion-item>Payment Method</button>\n    		<button ion-item>Bill Information</button>\n  		</ion-item-group>\n\n\n		<ion-item-group>\n    		<ion-item-divider color="yellow">Pets</ion-item-divider>\n    		<button ion-item (click)="pets()">Your Pets</button>\n    	</ion-item-group>\n\n		<ion-item-group>\n    		<ion-item-divider color="yellow">Information</ion-item-divider>\n    		<ion-item>Contact Us: +1 800 556 7898</ion-item>\n    		<ion-item><a href="udogapp.com">Buy seasonal costumes for your furry friend</a></ion-item>\n  		</ion-item-group>\n\n	</ion-list>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/settings/settings.html"*/,
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]])
+    ], SettingsPage);
+    return SettingsPage;
+}());
+
+//# sourceMappingURL=settings.js.map
+
+/***/ }),
+
+/***/ 79:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ReportPage; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_platform_browser__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__tabs_tabs__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_firebase__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_firebase__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6__firebase_firestore__);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+
+
+/**
+ * Generated class for the ReportPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+var ReportPage = /** @class */ (function () {
+    function ReportPage(navCtrl, navParams, sanitizer, viewCtrl, storage, modalCtrl) {
+        this.navCtrl = navCtrl;
+        this.navParams = navParams;
+        this.sanitizer = sanitizer;
+        this.viewCtrl = viewCtrl;
+        this.storage = storage;
+        this.modalCtrl = modalCtrl;
+        this.rate = 5;
+    }
+    ReportPage.prototype.getSanitizeUrl = function (url) {
+        return this.sanitizer.bypassSecurityTrustUrl(url);
+    };
+    ReportPage.prototype.ionViewDidLoad = function () {
+        console.log('ionViewDidLoad ReportPage');
+        //this.loadData()
+    };
+    ReportPage.prototype.ionViewDidEnter = function () {
+        this.loadData();
+    };
+    ReportPage.prototype.loadData = function () {
+        this.walk = JSON.parse(localStorage.getItem('walk'));
+        this.rate = this.walk.rate;
+        console.log(this.rate);
+    };
+    ReportPage.prototype.submit = function () {
+        console.log(this.rate);
+        var walkRef = __WEBPACK_IMPORTED_MODULE_5_firebase__["firestore"]().collection('walks').doc("" + this.walk.id)
+            .update({
+            rating: this.rate
+        })
+            .then(function () {
+            console.log('update success');
+        })
+            .catch(function (err) { return console.log(err); });
+        this.viewCtrl.dismiss();
+        this.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_3__tabs_tabs__["a" /* TabsPage */]);
+    };
+    ReportPage.prototype.continue = function () {
+        //let rateModal = this.modalCtrl.create(RateWalkPage)
+        //rateModal.present()
+        this.viewCtrl.dismiss();
+        this.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_3__tabs_tabs__["a" /* TabsPage */]);
+    };
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_9" /* ViewChild */])('map'),
+        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_0__angular_core__["u" /* ElementRef */])
+    ], ReportPage.prototype, "mapElement", void 0);
+    ReportPage = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'page-report',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/report/report.html"*/'<!--\n  Generated template for the ReportPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>report</ion-title>\n\n    <!--<ion-buttons end>\n\n      <button ion-button (click)="submit()"> SAVE </button>\n\n    </ion-buttons>-->\n\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n	<!--<div #map id = "map"></div>-->\n\n	<!--<img src="https://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=600x300&maptype=roadmap\n&markers=color:blue%7Clabel:S%7C40.702147,-74.015794&markers=color:green%7Clabel:G%7C40.711614,-74.012318\n&markers=color:red%7Clabel:C%7C40.718217,-73.998284\n&key=AIzaSyBgI_KhX2VYMgTTsJAJdlnLWdeD0Ce4DaQ"/> -->\n\n	<ion-item-divider color="yellow"> \n\n		<p text-center> Finished the walk! </p>\n\n	</ion-item-divider>\n\n	<ion-row>\n\n			<div class="activity"> \n				<p> Your Dog :</p> \n				<ion-row class="pee-row">\n					<div class="pee-pic">\n					<img src="assets/imgs/pee.svg" />\n					</div>\n					<div class="pee-info">\n					<p> Pee {{walk?.walknotes.pee }} times </p>\n					</div>\n					<div class="pee-type">\n						<p>(Good)</p>\n					</div>\n				</ion-row>\n				<ion-row class="poo-row">\n					<div class="poo-pic">\n					<img src="assets/imgs/poo.svg" />\n					</div>\n					<div class="poo-info">\n					<p> Poo {{walk?.walknotes.poo }} times </p>\n					</div>\n					<div class="poo-type">\n						<p>(Good)</p>\n					</div>\n				</ion-row>\n			</div>\n\n	</ion-row>\n\n	<ion-row>\n\n		<div>\n\n				<p text-center> Observations: </p>\n\n				<p align="center" class="observations">  {{walk?.walknotes.comments }}  </p>\n\n		</div>\n\n\n	</ion-row>\n\n	<ion-row padding>\n\n	\n				<img [src]="walk?.walker.pic"  class="profile-image"/>\n\n				<p text-center>  You rated {{walk?.walker.name }} </p>\n\n				<rating [(ngModel)]="rate" \n			        readOnly="true" \n			        max="5" \n			        emptyStarIconName="star-outline" \n			        halfStarIconName="star-half" \n			        starIconName="star" \n			        nullable="false">        	\n			     </rating>\n\n	</ion-row> \n\n	<ion-row padding> <a> Tell a friend about us and get $25 Off </a> </ion-row>\n\n	<ion-row padding> <a> Would you like to help feed homeless dogs </a> </ion-row>\n\n	<ion-row padding>\n\n		<ion-col col-6 offset-3>\n				<button ion-button color="orange" (click)="continue()" round> Done </button>\n		</ion-col>\n\n	</ion-row>\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/report/report.html"*/,
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_platform_browser__["c" /* DomSanitizer */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["m" /* ViewController */],
+            __WEBPACK_IMPORTED_MODULE_4__ionic_storage__["b" /* Storage */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* ModalController */]])
+    ], ReportPage);
+    return ReportPage;
+}());
+
+//# sourceMappingURL=report.js.map
+
+/***/ }),
+
+/***/ 80:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return RateWalkPage; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__tabs_tabs__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_firebase__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__firebase_firestore__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__firebase_firestore___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4__firebase_firestore__);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+/**
+ * Generated class for the RateWalkPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+var RateWalkPage = /** @class */ (function () {
+    function RateWalkPage(navCtrl, navParams, viewCtrl) {
+        this.navCtrl = navCtrl;
+        this.navParams = navParams;
+        this.viewCtrl = viewCtrl;
+    }
+    RateWalkPage.prototype.ionViewDidEnter = function () {
+        this.request = JSON.parse(localStorage.getItem('request'));
+    };
+    RateWalkPage.prototype.ionViewDidLoad = function () {
+        console.log('ionViewDidLoad RateWalkPage');
+    };
+    RateWalkPage.prototype.send = function () {
+        var _this = this;
+        __WEBPACK_IMPORTED_MODULE_3_firebase__["firestore"]()
+            .collection('walks')
+            .doc("" + this.request.id)
+            .update({
+            rate: this.rate,
+            comments: this.comments,
+            rated: true,
+        })
+            .then(function () {
+            console.log('update success');
+            _this.viewCtrl.dismiss();
+            _this.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_2__tabs_tabs__["a" /* TabsPage */]);
+        })
+            .catch(function (err) { return console.log(err); });
+        //this.viewCtrl.dismiss()
+        //this.navCtrl.goToRoot()
+        //localStorage.removeItem('request')
+    };
+    RateWalkPage = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'page-rate-walk',template:/*ion-inline-start:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/rate-walk/rate-walk.html"*/'<!--\n  Generated template for the RateWalkPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>RateWalk</ion-title>\n  </ion-navbar>\n\n</ion-header>\n\n\n<ion-content padding>\n\n\n	<ion-item-divider color="yellow"> \n\n		<p text-center> REVIEW THE WALKER </p>\n\n	</ion-item-divider>\n\n	<br>\n	<br>\n\n\n	<ion-row>\n\n		<img [src]="request?.walker.pic" class="profile-image"  />\n\n\n	</ion-row>\n\n	<ion-row>\n\n		<ion-label text-center> {{ request?.walker.name }} </ion-label>\n\n	</ion-row>\n\n	<br>\n	<br>\n\n	<ion-row>\n\n\n		<ion-label text-center> Review the Walker </ion-label>\n\n	</ion-row>\n\n	<ion-row>\n\n		<rating [(ngModel)]="rate" \n	        readOnly="false" \n	        max="5" \n	        emptyStarIconName="star-outline" \n	        halfStarIconName="star-half" \n	        starIconName="star" \n	        nullable="false">        	\n		</rating>\n\n	</ion-row>\n\n		<div class="text-container">\n	<ion-row class="text">\n\n		\n			<textarea rows="3" type="text" [(ngModel)]="comments" placeholder="Write a comment" [ngStyle]="{\'width\':\'90%\' }"></textarea> \n		\n\n	</ion-row>\n</div>\n\n\n		<div class="button-container">\n	<ion-row padding>\n\n		<ion-col >\n				<button ion-button color="orange" (click)="send()" round>SEND</button>\n		</ion-col>\n\n	</ion-row>\n</div>\n\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/skirosoft/Documents/IONIC/UDOG/udog-ionic-client-new/src/pages/rate-walk/rate-walk.html"*/,
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["m" /* ViewController */]])
+    ], RateWalkPage);
+    return RateWalkPage;
+}());
+
+//# sourceMappingURL=rate-walk.js.map
 
 /***/ })
 
-},[458]);
+},[290]);
 //# sourceMappingURL=main.js.map
