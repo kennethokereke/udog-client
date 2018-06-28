@@ -11,6 +11,7 @@ import { CardPage } from '../card/card'
 import { SocialSharing } from '@ionic-native/social-sharing'
 
 
+
 /**
  * Generated class for the WalkerPage page.
  *

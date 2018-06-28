@@ -198,7 +198,7 @@ Ionic pages and navigation.
 	
 							<ion-label class="info"> NAME </ion-label>
 	
-							<ion-label class="info"> {{ walker.name }} </ion-label>
+							<ion-label *ngFor="let item of items | async" class="info">{{item.first_name + '' + item.last_name | uppercase}}</ion-label>
 	
 	
 	
