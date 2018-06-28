@@ -9,6 +9,11 @@ import { DomSanitizer } from '@angular/platform-browser'
 import { PetPage } from '../pet/pet'
 import { CardPage } from '../card/card'
 import { SocialSharing } from '@ionic-native/social-sharing'
+import { AngularFireAuth } from 'angularfire2/auth';
+import { AngularFireDatabase } from 'angularfire2/database';
+import { AngularFirestore, AngularFirestoreCollection } from 'angularfire2/firestore';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
 
 
 /**
@@ -33,11 +38,21 @@ export class WalkerPage {
 		pic : ''
 	}
 
+	itemsCollection: AngularFirestoreCollection<Items>; //Firestore collection
+	items: Observable<Items[]>; // read collection
+
   constructor(public navCtrl: NavController, public navParams: NavParams, 
   	private storage : Storage,
   	public sanitizer : DomSanitizer,
-   private socialsharing : SocialSharing, ) {
-	   
+    private socialsharing : SocialSharing,
+    public afDatabase:AngularFireDatabase,
+    private afs: AngularFirestore ) {
+
+		interface Items {
+			description: string;
+			itemid: number;
+		}
+		
   }
 
   ngOnInit() {
@@ -54,6 +69,14 @@ export class WalkerPage {
 
    public getSanitizeUrl(url : string) {
      return this.sanitizer.bypassSecurityTrustUrl(url)
+   }
+
+   ionViewWillEnter() {
+	this.itemsCollection = this.afs.collection('walkers', ref => ref.where('email', '==', 'dzonga@udogapp.com'));
+	this.items = this.itemsCollection.valueChanges()
+	this.items.subscribe(item => {
+		this.walker.name = item[0].first_name;
+	})
    }
 
   ionViewDidLoad() {

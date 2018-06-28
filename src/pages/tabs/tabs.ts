@@ -20,7 +20,8 @@ export class TabsPage {
   tab1Root = HomePage;
   tab2Root = WalksPage;
   tab3Root = ProfilePage;
-  tab4Root = RateWalkPage
+  tab4Root = RateWalkPage;
+  tab5Root = TrackWalkPage;
   constructor() {
 
   }

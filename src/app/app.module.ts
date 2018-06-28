@@ -43,7 +43,10 @@ import { SelectMorePetsPage } from '../pages/select-more-pets/select-more-pets'
 
 import { HttpModule } from '@angular/http';
 import { IonicStorageModule } from '@ionic/storage'
-
+import { AngularFireModule } from 'angularfire2';
+import { AngularFireAuthModule } from 'angularfire2/auth';
+import { AngularFireDatabaseModule } from 'angularfire2/database';
+import { AngularFirestoreModule } from 'angularfire2/firestore';
 import { Ionic2RatingModule } from 'ionic2-rating'
 
 import { Stripe } from '@ionic-native/stripe'
@@ -54,6 +57,7 @@ import { ApiServiceProvider } from '../providers/api-service/api-service'
 import * as Constants from '../providers/config'
 
 const API_URL = Constants.API_URL;
+const firebaseAuth = Constants.firebaseConfig;
 
 //import { SocketIoModule, SocketIoConfig } from 'ng-socket-io'
 import { FireProvider } from '../providers/fire/fire';
@@ -97,6 +101,11 @@ const socketConfig = { url : API_URL , options : {}}
         mode : 'md'
         
     }),
+    AngularFireModule.initializeApp(firebaseAuth),
+    AngularFireAuthModule,
+    AngularFireDatabaseModule,
+    AngularFireAuthModule,
+    AngularFirestoreModule,
     IonicStorageModule.forRoot(),
     Ionic2RatingModule,
     //SocketIoModule.forRoot(socketConfig)

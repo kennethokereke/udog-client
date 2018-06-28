@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, Platform, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, Platform, AlertController, ViewController } from 'ionic-angular';
 import { Camera, CameraOptions } from '@ionic-native/camera'
 import * as firebase from 'firebase'
 import '@firebase/firestore'
@@ -50,7 +50,8 @@ export class PetPage {
       private camera : Camera,
       private platform : Platform,
       private storage : Storage,
-      public alertCtrl : AlertController ) {
+      public alertCtrl : AlertController,
+      public viewCtrl: ViewController ) {
     }
   
     ionViewDidLoad() {
@@ -105,6 +106,10 @@ export class PetPage {
               
             }).catch((err) => console.log(err));
         }
+    }
+
+    public close(){
+     this.viewCtrl.dismiss();
     }
   
     picChosen(event) {

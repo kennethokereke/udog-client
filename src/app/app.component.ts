@@ -3,11 +3,16 @@ import { Platform, AlertController, Events, ModalController } from 'ionic-angula
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import firebase from 'firebase'
-import { firebaseConfig } from '../providers/config'
+//import { firebaseConfig } from '../providers/config'
 
 import { TabsPage } from '../pages/tabs/tabs';
+import { TrackWalkPage } from '../pages/track-walk/track-walk'
 import { Geolocation } from '@ionic-native/geolocation'
+import { AngularFirestore } from 'angularfire2/firestore';
+import * as Constants from '../providers/config';
 import { NotificationAlertPage } from '../pages/notifications-alert/notifications-alert'
+
+const firebaseAuth = Constants.firebaseConfig;
 
 @Component({
   templateUrl: 'app.html'
@@ -18,7 +23,8 @@ export class MyApp {
   constructor(public alertCtrl : AlertController,public modalCtrl: ModalController,
       public events : Events, platform: Platform, statusBar: StatusBar, 
     splashScreen: SplashScreen,
-    private geolocation : Geolocation ) {
+    private geolocation : Geolocation,
+    private afs: AngularFirestore ) {
     platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
@@ -70,8 +76,8 @@ export class MyApp {
         })*/
     });
 
-
-    firebase.initializeApp(firebaseConfig)
+    firebase.initializeApp(firebaseAuth)
+    const firestore = afs.firestore.settings({timestampsInSnapshots: true});
   }
 
 
