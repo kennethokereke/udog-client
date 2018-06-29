@@ -16,6 +16,7 @@ import 'rxjs/add/operator/map';
 import { SocialSharing } from '@ionic-native/social-sharing';
 
 
+
 /**
  * Generated class for the WalkerPage page.
  *
