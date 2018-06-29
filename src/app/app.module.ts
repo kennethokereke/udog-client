@@ -27,7 +27,7 @@ import { RegisterPage } from '../pages/register/register'
 import { RateWalkPage } from '../pages/rate-walk/rate-walk'
 import { EditprofilePage } from '../pages/editprofile/editprofile'
 import { PetsPage } from '../pages/pets/pets'
-import { NotificationAlertPage } from '../pages/notifications-alert/notifications-alert'
+import { VideocallPage } from '../pages/videocall/videocall'
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -39,11 +39,14 @@ import { StreamingMedia } from '@ionic-native/streaming-media'
 import { Camera, CameraOptions } from '@ionic-native/camera'
 import { Geolocation } from '@ionic-native/geolocation'
 import { Facebook } from '@ionic-native/facebook'
-import { SelectMorePetsPage } from '../pages/select-more-pets/select-more-pets'
+import firebase from 'firebase';
 
 import { HttpModule } from '@angular/http';
 import { IonicStorageModule } from '@ionic/storage'
-
+import { AngularFireModule } from 'angularfire2';
+import { AngularFireAuthModule } from 'angularfire2/auth';
+import { AngularFireDatabaseModule } from 'angularfire2/database';
+import { AngularFirestoreModule } from 'angularfire2/firestore';
 import { Ionic2RatingModule } from 'ionic2-rating'
 
 import { Stripe } from '@ionic-native/stripe'
@@ -59,6 +62,15 @@ const API_URL = Constants.API_URL;
 import { FireProvider } from '../providers/fire/fire';
 import { ClientProvider } from '../providers/client/client';
 const socketConfig = { url : API_URL , options : {}}
+
+export const firebaseAuth = {
+    apiKey: "AIzaSyBgI_KhX2VYMgTTsJAJdlnLWdeD0Ce4DaQ",
+    authDomain: "udog-eabc9.firebaseapp.com",
+    databaseURL: "https://udog-eabc9.firebaseio.com",
+    projectId: "udog-eabc9",
+    storageBucket: "udog-eabc9.appspot.com",
+    messagingSenderId: "556174911218"
+  };
 
 @NgModule({
   declarations: [
@@ -76,6 +88,7 @@ const socketConfig = { url : API_URL , options : {}}
     PetPage,
     WalkFeedPage,
     TrackWalkPage,
+    VideocallPage,
     WalksPage,
     ReportPage,
     SettingsPage,
@@ -85,9 +98,7 @@ const socketConfig = { url : API_URL , options : {}}
     RegisterPage,
     RateWalkPage,
 	EditprofilePage,
-  PetsPage,
-  NotificationAlertPage,
-  SelectMorePetsPage
+	PetsPage,
 
   ],
   imports: [
@@ -97,6 +108,11 @@ const socketConfig = { url : API_URL , options : {}}
         mode : 'md'
         
     }),
+    AngularFireModule.initializeApp(firebaseAuth),
+    AngularFireAuthModule,
+    AngularFireDatabaseModule,
+    AngularFireAuthModule,
+    AngularFirestoreModule,
     IonicStorageModule.forRoot(),
     Ionic2RatingModule,
     //SocketIoModule.forRoot(socketConfig)
@@ -118,6 +134,7 @@ const socketConfig = { url : API_URL , options : {}}
     WalkFeedPage,
     TrackWalkPage,
     WalksPage,
+    VideocallPage,
     ReportPage,
     SettingsPage,
     AddressPage,
@@ -126,9 +143,7 @@ const socketConfig = { url : API_URL , options : {}}
     RegisterPage,
     RateWalkPage,
 	EditprofilePage,
-  PetsPage,
-  NotificationAlertPage,
-  SelectMorePetsPage
+	PetsPage,
   ],
   providers: [
     GoogleMaps,

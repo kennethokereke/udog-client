@@ -32,6 +32,9 @@ export class SettingsPage {
   	this.navCtrl.push(PetsPage)
   }
   
-  
+  logout() {//Clears localStorage and directs to login
+   localStorage.clear();
+   this.navCtrl.push(EditprofilePage);
+  }
 
 }

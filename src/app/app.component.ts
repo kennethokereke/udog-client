@@ -1,13 +1,15 @@
 import { Component } from '@angular/core';
-import { Platform, AlertController, Events, ModalController } from 'ionic-angular';
+import { Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import firebase from 'firebase'
 import { firebaseConfig } from '../providers/config'
 
 import { TabsPage } from '../pages/tabs/tabs';
+//import { TrackWalkPage } from '../pages/track-walk/track-walk'
+import { WalkerPage } from '../pages/walker/walker';
+import { VideocallPage } from '../pages/videocall/videocall'
 import { Geolocation } from '@ionic-native/geolocation'
-import { NotificationAlertPage } from '../pages/notifications-alert/notifications-alert'
 
 @Component({
   templateUrl: 'app.html'
@@ -15,51 +17,18 @@ import { NotificationAlertPage } from '../pages/notifications-alert/notification
 export class MyApp {
   rootPage:any;
 
-  constructor(public alertCtrl : AlertController,public modalCtrl: ModalController,
-      public events : Events, platform: Platform, statusBar: StatusBar, 
+  constructor(platform: Platform, statusBar: StatusBar, 
     splashScreen: SplashScreen,
     private geolocation : Geolocation ) {
     platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
-      this.rootPage = TabsPage
+      this.rootPage = VideocallPage;
       statusBar.styleDefault();
       splashScreen.hide();
       let geoOptions = {
         timeout : 10000,
       }
-
-      this.events.subscribe('requestToWalker',(walkerData,reqData) => {
-         let profileModal = this.modalCtrl.create(NotificationAlertPage, { walkerData: walkerData, reqData: reqData });
-         profileModal.present();
-      });
-
-      // this.events.subscribe('displayNotification',(client_id,walker_id) => {
-      //     let ref = firebase.database().ref('/requestToWalker').child(client_id).child(walker_id);
-      //     ref.on('value',(snep) => {
-      //       console.log('requestNotification',snep.val());
-      //       let allData = snep.val();
-      //       let metchReq:any;
-      //       for(let tmpkey in allData){
-      //         //console.log('tmpkey',tmpkey);
-      //         if(allData[tmpkey]._id == JSON.parse(localStorage.getItem('setRequestID'))){
-      //           metchReq = allData[tmpkey];
-      //         }
-      //       }
-      //       console.log('metchReq',metchReq);
-      //       //console.log('walkerID',metchReq.walker_id);
-
-      //       let firestore = firebase.firestore();
-
-      //       firestore.collection('walkers').where('walker_id', '==', `${metchReq.walker_id}`).get()
-      //       .then((snapshot) => {
-      //           snapshot.forEach((doc) => {
-      //             this.events.publish('requestToWalker',doc.data(),metchReq);
-      //           });
-      //       }).catch((err) => console.log(err));
-      //     });
-      // });
-
       /*this.geolocation.getCurrentPosition(geoOptions)
         .then((pos) => {
           console.log(pos.coords)
@@ -72,6 +41,7 @@ export class MyApp {
 
 
     firebase.initializeApp(firebaseConfig)
+//   firebase.firestore().settings( { timestampsInSnapshots: true })
   }
 
 
@@ -106,5 +76,4 @@ export class MyApp {
 
     }
 }
-
 
